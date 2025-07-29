@@ -30,19 +30,31 @@ export default function Profile() {
     if (status === 'unauthenticated') {
       router.push('/auth/signin')
     } else if (session?.user) {
-      setFormData({
-        name: session.user.name || '',
-        email: session.user.email || '',
-        phone: (session.user as any).phone || '',
-        age: (session.user as any).age?.toString() || '',
-        gender: (session.user as any).gender || '',
-        location: (session.user as any).location || '',
-        preferredLanguage: (session.user as any).preferredLanguage || 'en',
-        userType: (session.user as any).userType || 'patient'
-      })
+      fetchUserProfile()
       fetchUserHistory()
     }
   }, [status, session, router])
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch('/api/user/profile')
+      if (response.ok) {
+        const userData = await response.json()
+        setFormData({
+          name: userData.name || '',
+          email: userData.email || '',
+          phone: userData.phone || '',
+          age: userData.age?.toString() || '',
+          gender: userData.gender || '',
+          location: userData.location || '',
+          preferredLanguage: userData.preferredLanguage || 'en',
+          userType: userData.userType || 'patient'
+        })
+      }
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error)
+    }
+  }
 
   const fetchUserHistory = async () => {
     try {

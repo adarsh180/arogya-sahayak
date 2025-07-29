@@ -51,7 +51,7 @@ export async function callAI(messages: AIMessage[], type: 'medical' | 'student' 
         method: "POST",
         headers: {
           "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-          "HTTP-Referer": "http://localhost:3000",
+          "HTTP-Referer": "https://arogya-sahayakl.netlify.app",
           "X-Title": "Arogya Sahayak",
           "Content-Type": "application/json"
         },
