@@ -183,7 +183,7 @@ export default function Dashboard() {
                       alt={action.name}
                       width={64}
                       height={64}
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-contain rounded-2xl"
                     />
                   </div>
                   <h3 className="font-medium text-gray-900 text-sm">{action.name}</h3>
@@ -209,7 +209,7 @@ export default function Dashboard() {
                             alt={action.name}
                             width={64}
                             height={64}
-                            className="w-full h-full object-contain"
+                            className="w-full h-full object-contain rounded-2xl"
                           />
                         </div>
                       ) : (
