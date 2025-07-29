@@ -63,18 +63,20 @@ Based on the symptoms: ${symptoms.join(', ')} with ${severity} severity lasting 
         symptoms,
         severity,
         duration,
-        age: parseInt(age) || 0,
-        gender: gender || 'not-specified',
-        analysis: translatedAnalysis,
-        suggestions: translatedSuggestions,
+        age: parseInt(age),
+        gender,
+        analysis: language !== 'en' ? translatedAnalysis : analysis,
+        suggestions: language !== 'en' ? translatedSuggestions : suggestions,
         language
       }
     })
 
     return NextResponse.json({
       id: symptomCheck.id,
-      analysis: translatedAnalysis,
-      suggestions: translatedSuggestions
+      analysis: language !== 'en' ? translatedAnalysis : analysis,
+      suggestions: language !== 'en' ? translatedSuggestions : suggestions,
+      originalAnalysis: language !== 'en' ? analysis : null,
+      originalSuggestions: language !== 'en' ? suggestions : null
     })
   } catch (error) {
     console.error('Symptom analysis error:', error)

@@ -8,6 +8,7 @@ import { INDIAN_LANGUAGES } from '@/lib/ai'
 import Navbar from '@/components/Navbar'
 import Sidebar from '@/components/Sidebar'
 import ChatInput from '@/components/ChatInput'
+import MessageRenderer from '@/components/MessageRenderer'
 import toast from 'react-hot-toast'
 
 interface Message {
@@ -264,20 +265,7 @@ export default function Chat() {
                     )}
                   </div>
                   <div className={`chat-message ${message.role === 'user' ? 'chat-user' : 'chat-assistant'} text-sm lg:text-base`}>
-                    <div className="leading-relaxed">
-                      {message.content.split('\n').map((line, index) => (
-                        line.trim() ? (
-                          <p key={index} className="mb-2 lg:mb-3 last:mb-0 text-gray-800">
-                            {line.startsWith('•') ? (
-                              <span className="flex items-start">
-                                <span className="text-primary-600 mr-2 mt-1">•</span>
-                                <span>{line.substring(1).trim()}</span>
-                              </span>
-                            ) : line}
-                          </p>
-                        ) : <br key={index} />
-                      ))}
-                    </div>
+                    <MessageRenderer content={message.content} role={message.role} />
                   </div>
                 </div>
               </div>
