@@ -4,7 +4,7 @@ A comprehensive AI-powered medical web application that provides healthcare supp
 
 ## 🚀 Live Demo
 
-Visit: [https://arogya-sahayak.vercel.app](https://arogya-sahayak.vercel.app)
+Visit: [https://arogya-sahayakl.netlify.app](https://arogya-sahayakl.netlify.app)
 
 ## ✨ What Our Website Can Do
 
