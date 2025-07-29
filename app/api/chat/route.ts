@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     // Translate if needed
     let translation = null
     if (language && language !== 'en') {
-      translation = await translateText(aiResponse, language)
+      translation = await translateText(aiResponse, language as string)
     }
 
     // Save AI response

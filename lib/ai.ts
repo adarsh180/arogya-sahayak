@@ -44,7 +44,7 @@ export async function callAI(messages: AIMessage[], type: 'medical' | 'student' 
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          "model": "deepseek/deepseek-r1-0528-qwen3-8b:free",
+          "model": "deepseek/deepseek-r1",
           "messages": [
             {
               "role": "system",
@@ -164,12 +164,15 @@ export const MEDICAL_YEARS = {
 }
 
 export async function translateText(text: string, targetLanguage: string) {
-  if (targetLanguage === 'en') return text
+  if (!targetLanguage || targetLanguage === 'en') return text
 
-  const translatePrompt = `Translate the following medical text to ${INDIAN_LANGUAGES[targetLanguage as keyof typeof INDIAN_LANGUAGES]} language. Maintain medical accuracy and terminology:\n\n${text}`
+  const languageName = INDIAN_LANGUAGES[targetLanguage as keyof typeof INDIAN_LANGUAGES]
+  if (!languageName) return text
+
+  const translatePrompt = `Translate the following medical text to ${languageName} language. Maintain medical accuracy and terminology:\n\n${text}`
 
   try {
-    const response = await callAI([{ role: 'user', content: translatePrompt }], 'medical', 2)
+    const response = await callAI([{ role: 'user', content: translatePrompt }], 'medical', targetLanguage)
     return response
   } catch (error) {
     console.error('Translation error:', error)
