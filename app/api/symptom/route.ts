@@ -36,6 +36,10 @@ Remember to always recommend consulting a healthcare professional for proper dia
 
     // Get AI analysis
     const analysis = await callAI([{ role: 'user', content: symptomPrompt }], 'symptom', language)
+    
+    if (!analysis) {
+      return NextResponse.json({ error: 'Failed to analyze symptoms' }, { status: 500 })
+    }
 
     // Create suggestions prompt
     const suggestionPrompt = `
@@ -43,6 +47,10 @@ Based on the symptoms: ${symptoms.join(', ')} with ${severity} severity lasting 
 `
 
     const suggestions = await callAI([{ role: 'user', content: suggestionPrompt }], 'symptom', language)
+    
+    if (!suggestions) {
+      return NextResponse.json({ error: 'Failed to generate suggestions' }, { status: 500 })
+    }
 
     // Translate if needed
     let translatedAnalysis = analysis
