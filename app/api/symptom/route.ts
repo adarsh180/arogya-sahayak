@@ -57,8 +57,11 @@ Based on the symptoms: ${symptoms.join(', ')} with ${severity} severity lasting 
     let translatedSuggestions = suggestions
 
     if (language !== 'en') {
-      translatedAnalysis = await translateText(analysis, language)
-      translatedSuggestions = await translateText(suggestions, language)
+      const translatedAnalysisResult = await translateText(analysis, language)
+      const translatedSuggestionsResult = await translateText(suggestions, language)
+      
+      translatedAnalysis = translatedAnalysisResult || analysis
+      translatedSuggestions = translatedSuggestionsResult || suggestions
     }
 
     // Save to database
