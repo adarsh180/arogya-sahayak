@@ -134,6 +134,10 @@ export async function POST(request: NextRequest) {
 
         const aiResponse = await callAI([{ role: 'user', content: aiPrompt }], 'medical', language)
         
+        if (!aiResponse) {
+          return NextResponse.json([])
+        }
+        
         try {
           const aiResult = JSON.parse(aiResponse)
           if (aiResult.term) {
@@ -160,6 +164,8 @@ export async function POST(request: NextRequest) {
             Keep medical accuracy. Return in same JSON format.`
             
             const translation = await callAI([{ role: 'user', content: translatePrompt }], 'medical', language)
+            if (!translation) continue
+            
             try {
               const translatedResult = JSON.parse(translation)
               if (translatedResult.term && translatedResult.definition) {
