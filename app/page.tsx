@@ -12,7 +12,7 @@ export default function Home() {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-white to-green-50">
+      <section className="relative py-12 lg:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-white to-green-50">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-100 rounded-full opacity-20 animate-pulse"></div>
@@ -33,15 +33,15 @@ export default function Home() {
 
           {/* Main Heading with Typewriter Effect */}
           <div className="mb-6">
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-4 animate-fade-in">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-gray-900 mb-4 animate-fade-in">
               <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-green-600 bg-clip-text text-transparent">
                 Arogya Sahayak
               </span>
             </h1>
-            <div className="h-2 w-32 bg-gradient-to-r from-blue-500 to-green-500 mx-auto rounded-full animate-slide-up"></div>
+            <div className="h-1 lg:h-2 w-24 lg:w-32 bg-gradient-to-r from-blue-500 to-green-500 mx-auto rounded-full animate-slide-up"></div>
           </div>
 
-          <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-4xl mx-auto leading-relaxed animate-fade-in">
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 mb-6 lg:mb-8 max-w-4xl mx-auto leading-relaxed animate-fade-in px-4">
             Your trusted <span className="font-semibold text-blue-600">AI-powered medical companion</span> for health analysis, 
             symptom checking, and medical education in <span className="font-semibold text-green-600">29+ Indian languages</span>
           </p>

@@ -24,43 +24,47 @@ export default function Navbar() {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-4 lg:space-x-8">
             {session ? (
               <>
-                <Link href="/chat" className="flex items-center space-x-1 text-gray-700 hover:text-primary-600">
+                <Link href="/chat" className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 text-sm lg:text-base">
                   <MessageCircle className="h-4 w-4" />
-                  <span>Medical Chat</span>
+                  <span className="hidden lg:inline">Medical Chat</span>
+                  <span className="lg:hidden">Chat</span>
                 </Link>
-                <Link href="/symptom-checker" className="flex items-center space-x-1 text-gray-700 hover:text-primary-600">
+                <Link href="/symptom-checker" className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 text-sm lg:text-base">
                   <Activity className="h-4 w-4" />
-                  <span>Symptom Checker</span>
+                  <span className="hidden lg:inline">Symptom Checker</span>
+                  <span className="lg:hidden">Symptoms</span>
                 </Link>
-                <Link href="/student" className="flex items-center space-x-1 text-gray-700 hover:text-primary-600">
+                <Link href="/student" className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 text-sm lg:text-base">
                   <GraduationCap className="h-4 w-4" />
-                  <span>Student Corner</span>
+                  <span className="hidden lg:inline">Student Corner</span>
+                  <span className="lg:hidden">Study</span>
                 </Link>
-                <Link href="/dashboard" className="flex items-center space-x-1 text-gray-700 hover:text-primary-600">
+                <Link href="/dashboard" className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 text-sm lg:text-base">
                   <Activity className="h-4 w-4" />
-                  <span>Dashboard</span>
+                  <span className="hidden lg:inline">Dashboard</span>
+                  <span className="lg:hidden">Home</span>
                 </Link>
-                <Link href="/profile" className="flex items-center space-x-1 text-gray-700 hover:text-primary-600">
+                <Link href="/profile" className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 text-sm lg:text-base">
                   <User className="h-4 w-4" />
-                  <span>Profile</span>
+                  <span className="hidden lg:inline">Profile</span>
                 </Link>
                 <button
-                  onClick={() => signOut()}
-                  className="flex items-center space-x-1 text-gray-700 hover:text-red-600"
+                  onClick={() => signOut({ callbackUrl: '/' })}
+                  className="flex items-center space-x-1 text-gray-700 hover:text-red-600 text-sm lg:text-base"
                 >
                   <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
+                  <span className="hidden lg:inline">Logout</span>
                 </button>
               </>
             ) : (
               <>
-                <Link href="/auth/signin" className="text-gray-700 hover:text-primary-600">
+                <Link href="/auth/signin" className="text-gray-700 hover:text-primary-600 text-sm lg:text-base">
                   Sign In
                 </Link>
-                <Link href="/auth/signup" className="btn-primary">
+                <Link href="/auth/signup" className="btn-primary text-sm lg:text-base px-3 py-2 lg:px-4 lg:py-2">
                   Sign Up
                 </Link>
               </>
@@ -82,37 +86,71 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200">
+          <div className="px-4 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200 shadow-lg">
             {session ? (
               <>
-                <Link href="/chat" className="block px-3 py-2 text-gray-700 hover:text-primary-600">
-                  Medical Chat
+                <Link 
+                  href="/chat" 
+                  className="flex items-center space-x-3 px-3 py-3 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  <span>Medical Chat</span>
                 </Link>
-                <Link href="/symptom-checker" className="block px-3 py-2 text-gray-700 hover:text-primary-600">
-                  Symptom Checker
+                <Link 
+                  href="/symptom-checker" 
+                  className="flex items-center space-x-3 px-3 py-3 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Activity className="h-5 w-5" />
+                  <span>Symptom Checker</span>
                 </Link>
-                <Link href="/student" className="block px-3 py-2 text-gray-700 hover:text-primary-600">
-                  Student Corner
+                <Link 
+                  href="/student" 
+                  className="flex items-center space-x-3 px-3 py-3 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <GraduationCap className="h-5 w-5" />
+                  <span>Student Corner</span>
                 </Link>
-                <Link href="/dashboard" className="block px-3 py-2 text-gray-700 hover:text-primary-600">
-                  Dashboard
+                <Link 
+                  href="/dashboard" 
+                  className="flex items-center space-x-3 px-3 py-3 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Activity className="h-5 w-5" />
+                  <span>Dashboard</span>
                 </Link>
-                <Link href="/profile" className="block px-3 py-2 text-gray-700 hover:text-primary-600">
-                  Profile
+                <Link 
+                  href="/profile" 
+                  className="flex items-center space-x-3 px-3 py-3 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <User className="h-5 w-5" />
+                  <span>Profile</span>
                 </Link>
                 <button
-                  onClick={() => signOut()}
-                  className="block w-full text-left px-3 py-2 text-gray-700 hover:text-red-600"
+                  onClick={() => { signOut({ callbackUrl: '/' }); setIsOpen(false); }}
+                  className="flex items-center space-x-3 w-full text-left px-3 py-3 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                 >
-                  Logout
+                  <LogOut className="h-5 w-5" />
+                  <span>Logout</span>
                 </button>
               </>
             ) : (
               <>
-                <Link href="/auth/signin" className="block px-3 py-2 text-gray-700 hover:text-primary-600">
+                <Link 
+                  href="/auth/signin" 
+                  className="block px-3 py-3 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
                   Sign In
                 </Link>
-                <Link href="/auth/signup" className="block px-3 py-2 text-gray-700 hover:text-primary-600">
+                <Link 
+                  href="/auth/signup" 
+                  className="block px-3 py-3 text-center bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg font-medium hover:from-green-700 hover:to-blue-700 transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
                   Sign Up
                 </Link>
               </>

@@ -93,7 +93,7 @@ export default function SignUp() {
         })
 
         if (result?.ok) {
-          router.push('/chat')
+          router.push('/dashboard')
         }
       } else {
         toast.error(data.error || 'Something went wrong')
@@ -107,7 +107,7 @@ export default function SignUp() {
 
   const handleGoogleSignUp = async () => {
     try {
-      await signIn('google', { callbackUrl: '/chat' })
+      await signIn('google', { callbackUrl: '/dashboard' })
     } catch (error) {
       toast.error('Google sign up failed')
     }

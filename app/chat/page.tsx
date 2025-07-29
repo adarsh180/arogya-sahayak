@@ -3,9 +3,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Send, Bot, User, Globe, MessageCircle, Plus } from 'lucide-react'
-import Navbar from '@/components/Navbar'
+import { Bot, User, Menu, Plus, MessageCircle, Globe, Send } from 'lucide-react'
 import { INDIAN_LANGUAGES } from '@/lib/ai'
+import Navbar from '@/components/Navbar'
+import Sidebar from '@/components/Sidebar'
+import ChatInput from '@/components/ChatInput'
 import toast from 'react-hot-toast'
 
 interface Message {
@@ -31,6 +33,7 @@ export default function Chat() {
   const [language, setLanguage] = useState('en')
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([])
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -147,8 +150,8 @@ export default function Chat() {
       <Navbar />
       
       <div className="flex h-[calc(100vh-4rem)]">
-        {/* Sidebar */}
-        <div className="w-64 sidebar flex flex-col">
+        {/* Sidebar - Hidden on mobile */}
+        <div className="hidden lg:flex w-64 sidebar flex-col">
           <div className="p-4 border-b border-gray-200">
             <button
               onClick={startNewChat}
@@ -202,13 +205,38 @@ export default function Chat() {
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col">
           {/* Chat Header */}
-          <div className="header p-4">
-            <h1 className="text-xl font-semibold text-primary">Medical Assistant</h1>
-            <p className="text-sm text-secondary">Ask me about your medical reports, symptoms, or health concerns</p>
+          <div className="header p-3 lg:p-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                {/* Mobile New Chat Button */}
+                <button
+                  onClick={startNewChat}
+                  className="lg:hidden p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+                <div>
+                  <h1 className="text-lg lg:text-xl font-semibold text-primary">Medical Assistant</h1>
+                  <p className="text-xs lg:text-sm text-secondary hidden sm:block">Ask me about your medical reports, symptoms, or health concerns</p>
+                </div>
+              </div>
+              {/* Mobile Language Selector */}
+              <div className="lg:hidden">
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="text-xs border border-gray-300 rounded px-2 py-1"
+                >
+                  {Object.entries(INDIAN_LANGUAGES).slice(0, 5).map(([code, name]) => (
+                    <option key={code} value={code}>{name.split(' ')[0]}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-2 lg:p-4 space-y-3 lg:space-y-4">
             {messages.length === 0 && (
               <div className="text-center py-12">
                 <Bot className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -225,21 +253,21 @@ export default function Chat() {
                 key={message.id}
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`flex space-x-3 max-w-3xl ${message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                <div className={`flex space-x-2 lg:space-x-3 max-w-[85%] lg:max-w-3xl ${message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                  <div className={`flex-shrink-0 w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center ${
                     message.role === 'user' ? 'bg-primary-600' : 'bg-medical-600'
                   }`}>
                     {message.role === 'user' ? (
-                      <User className="h-4 w-4 text-white" />
+                      <User className="h-3 w-3 lg:h-4 lg:w-4 text-white" />
                     ) : (
-                      <Bot className="h-4 w-4 text-white" />
+                      <Bot className="h-3 w-3 lg:h-4 lg:w-4 text-white" />
                     )}
                   </div>
-                  <div className={`chat-message ${message.role === 'user' ? 'chat-user' : 'chat-assistant'}`}>
-                    <div className="text-sm leading-relaxed">
+                  <div className={`chat-message ${message.role === 'user' ? 'chat-user' : 'chat-assistant'} text-sm lg:text-base`}>
+                    <div className="leading-relaxed">
                       {message.content.split('\n').map((line, index) => (
                         line.trim() ? (
-                          <p key={index} className="mb-3 last:mb-0 text-gray-800">
+                          <p key={index} className="mb-2 lg:mb-3 last:mb-0 text-gray-800">
                             {line.startsWith('•') ? (
                               <span className="flex items-start">
                                 <span className="text-primary-600 mr-2 mt-1">•</span>
@@ -272,26 +300,26 @@ export default function Chat() {
           </div>
 
           {/* Input Form */}
-          <div className="bg-white border-t border-gray-200 p-4">
-            <form onSubmit={handleSubmit} className="flex space-x-4">
+          <div className="bg-white border-t border-gray-200 p-3 lg:p-4">
+            <form onSubmit={handleSubmit} className="flex space-x-2 lg:space-x-4">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Describe your symptoms or upload medical report details..."
-                className="flex-1 input-field"
+                placeholder="Ask about symptoms, reports..."
+                className="flex-1 input-field text-sm lg:text-base py-3 lg:py-2"
                 disabled={isLoading}
               />
               <button
                 type="submit"
                 disabled={isLoading || !input.trim()}
-                className="btn-primary px-6 flex items-center space-x-2"
+                className="btn-primary px-3 lg:px-6 py-3 lg:py-2 flex items-center space-x-1 lg:space-x-2 text-sm lg:text-base"
               >
                 <Send className="h-4 w-4" />
-                <span>Send</span>
+                <span className="hidden sm:inline">Send</span>
               </button>
             </form>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-500 mt-2 hidden sm:block">
               Always consult with healthcare professionals for medical decisions. This AI provides information only.
             </p>
           </div>

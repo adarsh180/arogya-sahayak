@@ -46,6 +46,11 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/auth/signin'
   },
+  events: {
+    signOut: () => {
+      window.location.href = '/'
+    }
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -79,6 +84,13 @@ export const authOptions: NextAuthOptions = {
         }
       }
       return session
+    },
+    async redirect({ url, baseUrl }) {
+      // Redirect to dashboard after signin/signup
+      if (url === baseUrl || url === `${baseUrl}/auth/signin` || url === `${baseUrl}/auth/signup`) {
+        return `${baseUrl}/dashboard`
+      }
+      return url
     }
   }
 }
