@@ -13,7 +13,14 @@ import Link from 'next/link'
 export default function Dashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [healthStats, setHealthStats] = useState({
+  const [healthStats, setHealthStats] = useState<{
+    bmi: number
+    lastCheckup: string | null
+    medications: number
+    appointments: number
+    lastBP: string | null
+    lastGlucose: string | null
+  }>({
     bmi: 0,
     lastCheckup: null,
     medications: 0,
