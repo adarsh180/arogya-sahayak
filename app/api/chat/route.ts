@@ -55,11 +55,15 @@ export async function POST(request: NextRequest) {
 
     // Get AI response
     const aiResponse = await callAI(aiMessages, type as 'medical' | 'student' | 'symptom', language)
+    
+    if (!aiResponse) {
+      return NextResponse.json({ error: 'Failed to get AI response' }, { status: 500 })
+    }
 
     // Translate if needed
     let translation = null
     if (language && language !== 'en') {
-      translation = await translateText(aiResponse, language as string)
+      translation = await translateText(aiResponse, language)
     }
 
     // Save AI response
