@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Phone, MapPin, Plus, User, Shield, Trash2 } from 'lucide-react'
+import { Phone, MapPin, Plus, User, Shield, Trash2, Building2, Truck } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import toast from 'react-hot-toast'
 
@@ -107,8 +107,8 @@ export default function EmergencyContacts() {
 
   const getContactIcon = (type: string) => {
     switch (type) {
-      case 'hospital': return Hospital
-      case 'ambulance': return Ambulance
+      case 'hospital': return Building2
+      case 'ambulance': return Truck
       case 'doctor': return User
       default: return Phone
     }
