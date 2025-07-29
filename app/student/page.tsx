@@ -197,7 +197,7 @@ export default function StudentCorner() {
 
     // Add context about exam and subjects
     const examName = MEDICAL_EXAMS[selectedExam as keyof typeof MEDICAL_EXAMS]
-    const subjectNames = selectedSubjects.map(s => EXAM_SUBJECTS[selectedExam as keyof typeof EXAM_SUBJECTS]?.[s] || s).join(', ')
+    const subjectNames = selectedSubjects.map(s => (EXAM_SUBJECTS[selectedExam as keyof typeof EXAM_SUBJECTS] as any)?.[s] || s).join(', ')
     const contextualMessage = `[${examName} - ${subjectNames}] ${userMessage}`
 
     // Add user message to UI immediately
@@ -470,7 +470,7 @@ export default function StudentCorner() {
               <div className="flex flex-wrap gap-1 mt-2">
                 {selectedSubjects.slice(0, 3).map(subject => (
                   <span key={subject} className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">
-                    {EXAM_SUBJECTS[selectedExam as keyof typeof EXAM_SUBJECTS]?.[subject]?.split(' ')[0] || subject}
+                    {(EXAM_SUBJECTS[selectedExam as keyof typeof EXAM_SUBJECTS] as any)?.[subject]?.split(' ')[0] || subject}
                   </span>
                 ))}
                 {selectedSubjects.length > 3 && (
@@ -544,7 +544,7 @@ export default function StudentCorner() {
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
               {selectedSubjects.map(subject => {
-                const subjectName = EXAM_SUBJECTS[selectedExam as keyof typeof EXAM_SUBJECTS]?.[subject] || subject
+                const subjectName = (EXAM_SUBJECTS[selectedExam as keyof typeof EXAM_SUBJECTS] as any)?.[subject] || subject
                 return (
                   <span key={subject} className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
                     {subjectName}
@@ -568,11 +568,11 @@ export default function StudentCorner() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
                   <div className="bg-white p-4 rounded-lg border border-gray-200">
                     <h4 className="font-medium text-gray-900 mb-2">Practice Questions</h4>
-                    <p className="text-sm text-gray-600">"Give me 5 MCQs on {selectedSubjects.length > 0 ? EXAM_SUBJECTS[selectedExam as keyof typeof EXAM_SUBJECTS]?.[selectedSubjects[0]] : 'your selected topics'}"</p>
+                    <p className="text-sm text-gray-600">"Give me 5 MCQs on {selectedSubjects.length > 0 ? (EXAM_SUBJECTS[selectedExam as keyof typeof EXAM_SUBJECTS] as any)?.[selectedSubjects[0]] : 'your selected topics'}"</p>
                   </div>
                   <div className="bg-white p-4 rounded-lg border border-gray-200">
                     <h4 className="font-medium text-gray-900 mb-2">Concept Explanation</h4>
-                    <p className="text-sm text-gray-600">"Explain the key concepts in {selectedSubjects.length > 0 ? EXAM_SUBJECTS[selectedExam as keyof typeof EXAM_SUBJECTS]?.[selectedSubjects[0]] : 'your subjects'}"</p>
+                    <p className="text-sm text-gray-600">"Explain the key concepts in {selectedSubjects.length > 0 ? (EXAM_SUBJECTS[selectedExam as keyof typeof EXAM_SUBJECTS] as any)?.[selectedSubjects[0]] : 'your subjects'}"</p>
                   </div>
                   <div className="bg-white p-4 rounded-lg border border-gray-200">
                     <h4 className="font-medium text-gray-900 mb-2">Study Strategy</h4>
