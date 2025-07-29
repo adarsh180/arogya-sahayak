@@ -326,15 +326,22 @@ export default function Home() {
                 Empowering healthcare through AI technology for a healthier India.
               </p>
               <div className="flex space-x-4">
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors cursor-pointer">
-                  <span className="text-sm font-bold">f</span>
-                </div>
-                <div className="w-10 h-10 bg-blue-400 rounded-full flex items-center justify-center hover:bg-blue-500 transition-colors cursor-pointer">
-                  <span className="text-sm font-bold">t</span>
-                </div>
-                <div className="w-10 h-10 bg-blue-800 rounded-full flex items-center justify-center hover:bg-blue-900 transition-colors cursor-pointer">
+                <a 
+                  href="https://www.linkedin.com/in/adarsh-tiwari-6a41a6217/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                >
                   <span className="text-sm font-bold">in</span>
-                </div>
+                </a>
+                <a 
+                  href="https://www.instagram.com/adarsh_tiwari180?igsh=eDNyenh1Znp1cnBl" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-pink-600 rounded-full flex items-center justify-center hover:bg-pink-700 transition-colors"
+                >
+                  <span className="text-sm font-bold">ig</span>
+                </a>
               </div>
             </div>
             
@@ -353,25 +360,25 @@ export default function Home() {
               <ul className="space-y-2 text-gray-400">
                 <li><Link href="/emergency" className="hover:text-white transition-colors">Emergency</Link></li>
                 <li><Link href="/dictionary" className="hover:text-white transition-colors">Medical Dictionary</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact Us</a></li>
+                <li><Link href="/help" className="hover:text-white transition-colors">Help Center</Link></li>
+                <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
               </ul>
             </div>
             
             <div>
               <h3 className="text-lg font-semibold mb-4">Legal</h3>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Medical Disclaimer</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Cookie Policy</a></li>
+                <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+                <li><Link href="/help" className="hover:text-white transition-colors">Medical Disclaimer</Link></li>
+                <li><Link href="/contact" className="hover:text-white transition-colors">Contact Support</Link></li>
               </ul>
             </div>
           </div>
           
           <div className="border-t border-gray-800 pt-8 text-center">
             <p className="text-gray-400 mb-2">
-              © 2024 Arogya Sahayak. All rights reserved.
+              © 2024 Arogya Sahayak. All rights reserved. Created by <strong>Adarsh Tiwari</strong> on 10/12/2024.
             </p>
             <p className="text-sm text-gray-500">
               <Shield className="h-4 w-4 inline mr-1" />
