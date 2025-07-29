@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { 
   Heart, Activity, Calendar, Users, FileText, Pill, 
   Phone, BookOpen, TrendingUp, Clock, AlertCircle 
@@ -77,18 +78,18 @@ export default function Dashboard() {
   }
 
   const quickActions = [
-    { name: 'Medical Chat', href: '/chat', icon: Heart, color: 'bg-red-500' },
-    { name: 'Symptom Checker', href: '/symptom-checker', icon: Activity, color: 'bg-green-500' },
-    { name: 'Health Tracker', href: '/health-tracker', icon: TrendingUp, color: 'bg-blue-500' },
-    { name: 'Medicine Reminder', href: '/medicine-reminder', icon: Pill, color: 'bg-purple-500' },
-    { name: 'Emergency Contacts', href: '/emergency', icon: Phone, color: 'bg-red-600' },
-    { name: 'Medical Dictionary', href: '/dictionary', icon: BookOpen, color: 'bg-indigo-500' },
+    { name: 'Medical Chat', href: '/chat', image: '/images/chat-bubble.png' },
+    { name: 'Symptom Checker', href: '/symptom-checker', image: '/images/medical-diagonist.png' },
+    { name: 'Health Tracker', href: '/health-tracker', image: '/images/monitor.png' },
+    { name: 'Medicine Reminder', href: '/medicine-reminder', image: '/images/pill-bottle.png' },
+    { name: 'Emergency Contacts', href: '/emergency', image: '/images/emergency.png' },
+    { name: 'Medical Dictionary', href: '/dictionary', image: '/images/book.png' },
   ]
 
   const studentActions = [
     { name: 'Mock Tests', href: '/mock-tests', icon: FileText, color: 'bg-orange-500' },
     { name: 'Study Planner', href: '/study-planner', icon: Calendar, color: 'bg-teal-500' },
-    { name: 'Student Corner', href: '/student', icon: Users, color: 'bg-purple-600' },
+    { name: 'Student Corner', href: '/student', image: '/images/hat-scholar.png' },
   ]
 
   return (
@@ -176,8 +177,14 @@ export default function Dashboard() {
                   href={action.href}
                   className="card hover:shadow-lg transition-all duration-200 text-center group"
                 >
-                  <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform`}>
-                    <action.icon className="h-6 w-6 text-white" />
+                  <div className="w-16 h-16 mx-auto mb-3 group-hover:scale-110 transition-transform">
+                    <Image
+                      src={action.image}
+                      alt={action.name}
+                      width={64}
+                      height={64}
+                      className="w-full h-full object-contain"
+                    />
                   </div>
                   <h3 className="font-medium text-gray-900 text-sm">{action.name}</h3>
                 </Link>
@@ -195,9 +202,21 @@ export default function Dashboard() {
                       href={action.href}
                       className="card hover:shadow-lg transition-all duration-200 text-center group"
                     >
-                      <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform`}>
-                        <action.icon className="h-6 w-6 text-white" />
-                      </div>
+                      {action.image ? (
+                        <div className="w-16 h-16 mx-auto mb-3 group-hover:scale-110 transition-transform">
+                          <Image
+                            src={action.image}
+                            alt={action.name}
+                            width={64}
+                            height={64}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform`}>
+                          <action.icon className="h-6 w-6 text-white" />
+                        </div>
+                      )}
                       <h3 className="font-medium text-gray-900 text-sm">{action.name}</h3>
                     </Link>
                   ))}

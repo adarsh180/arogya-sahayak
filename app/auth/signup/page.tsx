@@ -31,6 +31,7 @@ export default function SignUp() {
     currentYear: '',
     medicalCollege: ''
   })
+  const [acceptTerms, setAcceptTerms] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
@@ -58,6 +59,11 @@ export default function SignUp() {
 
     if (formData.password.length < 6) {
       toast.error('Password must be at least 6 characters')
+      return
+    }
+
+    if (!acceptTerms) {
+      toast.error('Please accept the Terms of Service and Privacy Policy')
       return
     }
 
@@ -513,9 +519,50 @@ export default function SignUp() {
               </div>
             </motion.div>
 
+            {/* Terms and Privacy Checkbox */}
+            <motion.div
+              className="flex items-start space-x-3 p-4 bg-gray-50 rounded-2xl border border-gray-200"
+              initial={{ opacity: 0, y: 20 }}
+              animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+              transition={{ duration: 0.5, delay: 0.9 }}
+            >
+              <div className="flex items-center h-5">
+                <input
+                  id="accept-terms"
+                  type="checkbox"
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                  className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2"
+                  required
+                />
+              </div>
+              <div className="text-sm">
+                <label htmlFor="accept-terms" className="text-gray-700">
+                  I agree to the{' '}
+                  <a
+                    href="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-green-600 hover:text-green-700 font-medium underline"
+                  >
+                    Terms of Service
+                  </a>
+                  {' '}and{' '}
+                  <a
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-green-600 hover:text-green-700 font-medium underline"
+                  >
+                    Privacy Policy
+                  </a>
+                </label>
+              </div>
+            </motion.div>
+
             <motion.button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !acceptTerms}
               className="group relative w-full bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 text-white font-bold py-4 px-6 rounded-2xl text-lg transition-all duration-500 hover:shadow-2xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden mt-8"
               initial={{ opacity: 0, y: 20 }}
               animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
