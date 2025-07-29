@@ -1,4 +1,8 @@
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY!
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
+
+if (!OPENROUTER_API_KEY) {
+  console.error('OPENROUTER_API_KEY is not configured')
+}
 
 export interface AIMessage {
   role: 'user' | 'assistant'
@@ -99,6 +103,10 @@ ${language !== 'en' ? `Always respond in ${INDIAN_LANGUAGES[language as keyof ty
         await delay(Math.pow(2, attempt) * 1000) // Exponential backoff
       }
 
+      if (!OPENROUTER_API_KEY) {
+        return "AI service is not properly configured. Please check the API key configuration."
+      }
+
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -108,7 +116,7 @@ ${language !== 'en' ? `Always respond in ${INDIAN_LANGUAGES[language as keyof ty
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          "model": "deepseek/deepseek-r1",
+          "model": "microsoft/wizardlm-2-8x22b",
           "messages": [
             {
               "role": "system",
@@ -120,6 +128,10 @@ ${language !== 'en' ? `Always respond in ${INDIAN_LANGUAGES[language as keyof ty
           "max_tokens": 1000
         })
       })
+
+      if (response.status === 401) {
+        return "AI service authentication failed. Please check API configuration and try again."
+      }
 
       if (response.status === 402) {
         return "AI service is temporarily unavailable due to billing limits. Please try again later or contact support."
