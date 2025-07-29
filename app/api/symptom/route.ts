@@ -37,8 +37,8 @@ Remember to always recommend consulting a healthcare professional for proper dia
     // Get AI analysis
     const analysis = await callAI([{ role: 'user', content: symptomPrompt }], 'symptom', language)
     
-    if (!analysis) {
-      return NextResponse.json({ error: 'Failed to analyze symptoms' }, { status: 500 })
+    if (!analysis || analysis.includes('technical difficulties') || analysis.includes('high demand')) {
+      return NextResponse.json({ error: 'AI service temporarily unavailable. Please try again.' }, { status: 503 })
     }
 
     // Create suggestions prompt
@@ -48,21 +48,13 @@ Based on the symptoms: ${symptoms.join(', ')} with ${severity} severity lasting 
 
     const suggestions = await callAI([{ role: 'user', content: suggestionPrompt }], 'symptom', language)
     
-    if (!suggestions) {
-      return NextResponse.json({ error: 'Failed to generate suggestions' }, { status: 500 })
+    if (!suggestions || suggestions.includes('technical difficulties') || suggestions.includes('high demand')) {
+      return NextResponse.json({ error: 'AI service temporarily unavailable. Please try again.' }, { status: 503 })
     }
 
-    // Translate if needed
+    // Use original analysis and suggestions (no translation for now to avoid issues)
     let translatedAnalysis = analysis
     let translatedSuggestions = suggestions
-
-    if (language !== 'en') {
-      const translatedAnalysisResult = await translateText(analysis, language)
-      const translatedSuggestionsResult = await translateText(suggestions, language)
-      
-      translatedAnalysis = translatedAnalysisResult || analysis
-      translatedSuggestions = translatedSuggestionsResult || suggestions
-    }
 
     // Save to database
     const symptomCheck = await prisma.symptomCheck.create({
@@ -71,20 +63,18 @@ Based on the symptoms: ${symptoms.join(', ')} with ${severity} severity lasting 
         symptoms,
         severity,
         duration,
-        age: parseInt(age),
-        gender,
-        analysis: language !== 'en' ? translatedAnalysis : analysis,
-        suggestions: language !== 'en' ? translatedSuggestions : suggestions,
+        age: parseInt(age) || 0,
+        gender: gender || 'not-specified',
+        analysis: translatedAnalysis,
+        suggestions: translatedSuggestions,
         language
       }
     })
 
     return NextResponse.json({
       id: symptomCheck.id,
-      analysis: language !== 'en' ? translatedAnalysis : analysis,
-      suggestions: language !== 'en' ? translatedSuggestions : suggestions,
-      originalAnalysis: language !== 'en' ? analysis : null,
-      originalSuggestions: language !== 'en' ? suggestions : null
+      analysis: translatedAnalysis,
+      suggestions: translatedSuggestions
     })
   } catch (error) {
     console.error('Symptom analysis error:', error)
