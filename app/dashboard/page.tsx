@@ -86,7 +86,13 @@ export default function Dashboard() {
     { name: 'Medical Dictionary', href: '/dictionary', image: '/images/book.png' },
   ]
 
-  const studentActions = [
+  const studentActions: Array<{
+    name: string
+    href: string
+    icon?: any
+    color?: string
+    image?: string
+  }> = [
     { name: 'Mock Tests', href: '/mock-tests', icon: FileText, color: 'bg-orange-500' },
     { name: 'Study Planner', href: '/study-planner', icon: Calendar, color: 'bg-teal-500' },
     { name: 'Student Corner', href: '/student', image: '/images/hat-scholar.png' },
