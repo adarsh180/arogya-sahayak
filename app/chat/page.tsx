@@ -157,13 +157,31 @@ export default function Chat() {
           createdAt: data.message.createdAt
         }])
       } else {
-        toast.error('Failed to send message')
-        // Remove the temporary user message on error
-        setMessages(prev => prev.slice(0, -1))
+        const errorData = await response.json().catch(() => ({}))
+        
+        if (response.status === 503 && errorData.fallback) {
+          // Add error message as assistant response
+          setMessages(prev => [...prev, {
+            id: Date.now().toString() + '_error',
+            role: 'assistant',
+            content: errorData.error || 'I\'m currently experiencing high demand. Please try again in a few moments.',
+            createdAt: new Date().toISOString()
+          }])
+        } else {
+          toast.error(errorData.error || 'Failed to send message')
+          // Remove the temporary user message on error
+          setMessages(prev => prev.slice(0, -1))
+        }
       }
     } catch (error) {
-      toast.error('Network error')
-      setMessages(prev => prev.slice(0, -1))
+      console.error('Chat error:', error)
+      // Add error message as assistant response
+      setMessages(prev => [...prev, {
+        id: Date.now().toString() + '_error',
+        role: 'assistant',
+        content: 'I\'m experiencing technical difficulties. Please check your internet connection and try again.',
+        createdAt: new Date().toISOString()
+      }])
     } finally {
       setIsLoading(false)
     }

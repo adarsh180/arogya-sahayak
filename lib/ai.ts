@@ -1,4 +1,5 @@
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY!
+const GROQ_API_KEY = process.env.GROQ_API_KEY
 
 export interface AIMessage {
   role: 'user' | 'assistant'
@@ -20,6 +21,43 @@ function formatResponse(text: string): string {
     .replace(/\n\s*[-*+]\s/g, '\n• ') // Convert lists to bullet points
     .replace(/\n\s*\d+\.\s/g, '\n') // Remove numbered lists
     .trim()
+}
+
+const MODELS = [
+  "google/gemma-2-9b-it:free",
+  "meta-llama/llama-3.2-3b-instruct:free",
+  "microsoft/wizardlm-2-8x22b"
+]
+
+async function callGroqAPI(messages: AIMessage[], systemPrompt: string) {
+  if (!GROQ_API_KEY) return null
+  
+  try {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "llama-3.1-8b-instant",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages
+        ],
+        temperature: 0.7,
+        max_tokens: 1000
+      })
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      return data.choices[0]?.message?.content
+    }
+  } catch (error) {
+    console.error('Groq API error:', error)
+  }
+  return null
 }
 
 export async function callAI(messages: AIMessage[], type: 'medical' | 'student' | 'symptom' = 'medical', language = 'en', retries = 3) {
@@ -68,51 +106,73 @@ If asked about who built you, mention that Adarsh Tiwari created you to help peo
 ${language !== 'en' ? `Always respond in ${INDIAN_LANGUAGES[language as keyof typeof INDIAN_LANGUAGES]} language only.` : ''}`
   }
 
-  for (let attempt = 0; attempt < retries; attempt++) {
-    try {
-      if (attempt > 0) {
-        await delay(Math.pow(2, attempt) * 1000) // Exponential backoff
-      }
+  // Try Groq first (higher rate limits)
+  const groqResponse = await callGroqAPI(messages, systemPrompts[type])
+  if (groqResponse) {
+    return formatResponse(groqResponse)
+  }
 
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-          "HTTP-Referer": "http://arogya-sahayakl.netlify.app",
-          "X-Title": "Arogya Sahayak",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          "model": "meta-llama/llama-3.2-3b-instruct:free",
-          "messages": [
-            {
-              "role": "system",
-              "content": systemPrompts[type]
-            },
-            ...messages
-          ],
-          "temperature": 0.7,
-          "max_tokens": 800
+  // Fallback to OpenRouter
+  for (let modelIndex = 0; modelIndex < MODELS.length; modelIndex++) {
+    const currentModel = MODELS[modelIndex]
+    
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        if (attempt > 0) {
+          await delay(Math.pow(2, attempt) * 1000)
+        }
+
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+            "HTTP-Referer": "https://arogya-sahayakl.netlify.app",
+            "X-Title": "Arogya Sahayak",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            "model": currentModel,
+            "messages": [
+              {
+                "role": "system",
+                "content": systemPrompts[type]
+              },
+              ...messages
+            ],
+            "temperature": 0.7,
+            "max_tokens": currentModel.includes('free') ? 800 : 1000,
+            "top_p": 1,
+            "frequency_penalty": 0,
+            "presence_penalty": 0
+          })
         })
-      })
 
       if (response.status === 402) {
         return "AI service billing limit reached. Please try again later or contact support."
       }
 
-      if (response.status === 429) {
-        if (attempt === retries - 1) {
-          return "I'm currently experiencing high demand. Please try again in a few moments."
+        if (response.status === 429) {
+          const errorData = await response.json().catch(() => ({}))
+          
+          // Check if it's a daily rate limit
+          if (errorData.error?.message?.includes('free-models-per-day')) {
+            return "I've reached my daily limit for free AI models. The service will reset tomorrow, or you can add credits to your OpenRouter account for unlimited access. Please try again later."
+          }
+          
+          const waitTime = Math.min(5000 * Math.pow(2, attempt), 30000) // Max 30 seconds
+          await delay(waitTime)
+          if (attempt === retries - 1 && modelIndex === MODELS.length - 1) {
+            return "I'm currently experiencing high demand. Please try again in a few moments."
+          }
+          continue // Retry with same model
         }
-        continue // Retry
-      }
 
-      if (response.status === 502 || response.status === 503) {
-        if (attempt === retries - 1) {
-          return "The AI service is temporarily unavailable. Please try again in a few moments."
+        if (response.status === 502 || response.status === 503) {
+          if (attempt === retries - 1) {
+            break // Try next model
+          }
+          continue // Retry with same model
         }
-        continue // Retry
-      }
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -120,16 +180,19 @@ ${language !== 'en' ? `Always respond in ${INDIAN_LANGUAGES[language as keyof ty
         throw new Error(`AI API error: ${response.status} - ${errorText}`)
       }
 
-      const data = await response.json()
-      const content = data.choices[0]?.message?.content || "I apologize, but I couldn't process your request. Please try again."
-      return formatResponse(content)
-    } catch (error) {
-      console.error(`AI API Error (attempt ${attempt + 1}):`, error)
-      if (attempt === retries - 1) {
-        return "I'm experiencing technical difficulties. Please try again later."
+        const data = await response.json()
+        const content = data.choices[0]?.message?.content || "I apologize, but I couldn't process your request. Please try again."
+        return formatResponse(content)
+      } catch (error) {
+        console.error(`AI API Error (model: ${currentModel}, attempt ${attempt + 1}):`, error)
+        if (attempt === retries - 1) {
+          break // Try next model
+        }
       }
     }
   }
+  
+  return "I'm experiencing technical difficulties. Please try again later."
 }
 
 export const INDIAN_LANGUAGES = {

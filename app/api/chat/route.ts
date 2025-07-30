@@ -54,10 +54,15 @@ export async function POST(request: NextRequest) {
     aiMessages.push({ role: 'user', content: message })
 
     // Get AI response
+    console.log('Calling AI with messages:', aiMessages.length, 'type:', type, 'language:', language)
     const aiResponse = await callAI(aiMessages, type as 'medical' | 'student', language)
     
-    if (!aiResponse) {
-      return NextResponse.json({ error: 'Failed to get AI response' }, { status: 500 })
+    if (!aiResponse || aiResponse.includes('technical difficulties') || aiResponse.includes('high demand')) {
+      console.error('AI Response failed:', aiResponse)
+      return NextResponse.json({ 
+        error: aiResponse || 'Failed to get AI response',
+        fallback: true 
+      }, { status: 503 })
     }
 
     // Translate if needed
