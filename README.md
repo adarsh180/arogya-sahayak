@@ -19,7 +19,7 @@ A comprehensive medical AI web application built with Next.js that provides pers
 - **Backend**: Next.js API Routes, Prisma ORM
 - **Database**: SQLite (development), PostgreSQL (production)
 - **Authentication**: NextAuth.js with Google OAuth
-- **AI Integration**: Kimi K2 API via OpenRouter
+- **AI Integration**
 - **PDF Generation**: jsPDF
 - **UI Components**: Headless UI, Lucide React Icons
 
@@ -62,17 +62,6 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view the application.
-
-## Environment Variables
-
-Create a `.env.local` file with the following variables:
-
-- `NEXTAUTH_URL` - Your application URL
-- `NEXTAUTH_SECRET` - Secret for NextAuth.js
-- `GOOGLE_CLIENT_ID` - Google OAuth client ID (optional)
-- `GOOGLE_CLIENT_SECRET` - Google OAuth client secret (optional)
-- `DATABASE_URL` - Database connection string
-- `KIMI_API_KEY` - OpenRouter API key for Kimi K2 model
 
 ## Usage
 
