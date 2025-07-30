@@ -43,7 +43,7 @@ export default function Home() {
 
           <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 mb-6 lg:mb-8 max-w-4xl mx-auto leading-relaxed animate-fade-in px-4">
             Your trusted <span className="font-semibold text-blue-600">AI-powered medical companion</span> for health analysis, 
-            symptom checking, and medical education in <span className="font-semibold text-green-600">29+ Indian languages</span>
+            medical education, and health management in <span className="font-semibold text-green-600">29+ Indian languages</span>
           </p>
 
           {/* Stats Counter Animation */}
@@ -129,20 +129,7 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* Symptom Checker */}
-            <div className="group card hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-l-4 border-green-500">
-              <div className="relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-20 h-20 bg-green-100 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-500"></div>
-                <Activity className="h-12 w-12 text-green-600 mb-4 relative z-10 group-hover:scale-110 transition-transform duration-300" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3 text-gray-900">AI Symptom Checker</h3>
-              <p className="text-gray-600 mb-4 leading-relaxed">
-                Describe your symptoms and get detailed analysis with severity assessment and home remedies
-              </p>
-              <Link href="/symptom-checker" className="inline-flex items-center text-green-600 hover:text-green-700 font-medium group-hover:translate-x-2 transition-transform duration-300">
-                Check Symptoms <ArrowRight className="h-4 w-4 ml-2" />
-              </Link>
-            </div>
+
 
             {/* Student Corner */}
             <div className="group card hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-l-4 border-purple-500">
@@ -353,9 +340,9 @@ export default function Home() {
               <h3 className="text-lg font-semibold mb-4">Features</h3>
               <ul className="space-y-2 text-gray-400">
                 <li><Link href="/chat" className="hover:text-white transition-colors">Medical Chat</Link></li>
-                <li><Link href="/symptom-checker" className="hover:text-white transition-colors">Symptom Checker</Link></li>
                 <li><Link href="/student" className="hover:text-white transition-colors">Student Corner</Link></li>
                 <li><Link href="/health-tracker" className="hover:text-white transition-colors">Health Tracker</Link></li>
+                <li><Link href="/medicine-reminder" className="hover:text-white transition-colors">Medicine Reminder</Link></li>
               </ul>
             </div>
             

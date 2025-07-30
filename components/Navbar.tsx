@@ -32,11 +32,7 @@ export default function Navbar() {
                   <span className="hidden lg:inline">Medical Chat</span>
                   <span className="lg:hidden">Chat</span>
                 </Link>
-                <Link href="/symptom-checker" className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 text-sm lg:text-base">
-                  <Activity className="h-4 w-4" />
-                  <span className="hidden lg:inline">Symptom Checker</span>
-                  <span className="lg:hidden">Symptoms</span>
-                </Link>
+
                 <Link href="/student" className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 text-sm lg:text-base">
                   <GraduationCap className="h-4 w-4" />
                   <span className="hidden lg:inline">Student Corner</span>
@@ -97,14 +93,7 @@ export default function Navbar() {
                   <MessageCircle className="h-5 w-5" />
                   <span>Medical Chat</span>
                 </Link>
-                <Link 
-                  href="/symptom-checker" 
-                  className="flex items-center space-x-3 px-3 py-3 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-lg transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <Activity className="h-5 w-5" />
-                  <span>Symptom Checker</span>
-                </Link>
+
                 <Link 
                   href="/student" 
                   className="flex items-center space-x-3 px-3 py-3 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-lg transition-colors"

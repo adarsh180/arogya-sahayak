@@ -79,7 +79,6 @@ export default function Dashboard() {
 
   const quickActions = [
     { name: 'Medical Chat', href: '/chat', image: '/images/chat-bubble.png' },
-    { name: 'Symptom Checker', href: '/symptom-checker', image: '/images/medical-diagonist.png' },
     { name: 'Health Tracker', href: '/health-tracker', image: '/images/monitor.png' },
     { name: 'Medicine Reminder', href: '/medicine-reminder', image: '/images/pill-bottle.png' },
     { name: 'Emergency Contacts', href: '/emergency', image: '/images/emergency.png' },

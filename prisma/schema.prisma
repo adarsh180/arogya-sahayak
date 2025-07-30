@@ -71,7 +71,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   chatSessions  ChatSession[]
-  symptoms      SymptomCheck[]
+
   medications   Medication[]
   healthRecords HealthRecord[]
   appointments  Appointment[]
@@ -226,21 +226,7 @@ model Message {
   chatSession   ChatSession @relation(fields: [chatSessionId], references: [id], onDelete: Cascade)
 }
 
-model SymptomCheck {
-  id          String   @id @default(cuid())
-  userId      String
-  symptoms    String[] 
-  severity    String   // mild, moderate, severe
-  duration    String
-  age         Int
-  gender      String
-  analysis    String   @db.Text
-  suggestions String   @db.Text
-  language    String   @default("en")
-  createdAt   DateTime @default(now())
 
-  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
 
 model VerificationToken {
   identifier String

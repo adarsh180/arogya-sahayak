@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     aiMessages.push({ role: 'user', content: message })
 
     // Get AI response
-    const aiResponse = await callAI(aiMessages, type as 'medical' | 'student' | 'symptom', language)
+    const aiResponse = await callAI(aiMessages, type as 'medical' | 'student', language)
     
     if (!aiResponse) {
       return NextResponse.json({ error: 'Failed to get AI response' }, { status: 500 })

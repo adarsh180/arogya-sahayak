@@ -10,7 +10,7 @@ Visit: [https://arogya-sahayakl.netlify.app](https://arogya-sahayakl.netlify.app
 
 ### 🏥 **Medical Features**
 - **AI Medical Chat**: Get instant medical advice and report analysis from our intelligent AI assistant
-- **Symptom Checker**: Describe your symptoms and receive detailed analysis with home remedies and severity assessment
+
 - **Health Tracker**: Monitor your BMI, blood pressure, glucose levels, and heart rate with AI-powered insights
 - **Medicine Reminder**: Never miss your medications with smart scheduling and timely notifications
 - **Emergency Contacts**: Quick access to emergency services and manage your medical contacts

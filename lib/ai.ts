@@ -44,7 +44,7 @@ function formatResponse(text: string): string {
   }
 }
 
-export async function callAI(messages: AIMessage[], type: 'medical' | 'student' | 'symptom' = 'medical', language = 'en', retries = 3) {
+export async function callAI(messages: AIMessage[], type: 'medical' | 'student' = 'medical', language = 'en', retries = 3) {
   const systemPrompts = {
     medical: `You are Arogya Sahayak, an AI medical assistant created by Adarsh Tiwari. Provide clear, helpful medical information with structured formatting. Use tables when presenting comparative data or structured information.
 
@@ -77,22 +77,6 @@ Example table:
 | Heart | Circulation | CAD |
 
 If asked about creator: "I was developed by Adarsh Tiwari to help medical students prepare for NEET, AIIMS, and other medical exams."
-
-${language !== 'en' ? `Always respond in ${INDIAN_LANGUAGES[language as keyof typeof INDIAN_LANGUAGES]} language only.` : ''}`,
-    symptom: `You are a symptom analysis assistant created by Adarsh Tiwari. Provide clear symptom assessment with structured formatting and tables.
-
-Guidelines:
-- Provide structured symptom analysis
-- Use tables for severity scales, comparisons (format: | Column | Data |)
-- Include home care suggestions
-- Always recommend consulting healthcare professionals
-
-Example table:
-| Condition | Symptoms | Action |
-|-----------|----------|--------|
-| Cold | Runny nose | Home care |
-
-If asked about developer: "I am built by Adarsh Tiwari to help people understand symptoms and provide initial guidance."
 
 ${language !== 'en' ? `Always respond in ${INDIAN_LANGUAGES[language as keyof typeof INDIAN_LANGUAGES]} language only.` : ''}`
   }
