@@ -83,7 +83,7 @@ ${language !== 'en' ? `Always respond in ${INDIAN_LANGUAGES[language as keyof ty
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          "model": "google/gemma-2-9b-it:free",
+          "model": "meta-llama/llama-3.2-3b-instruct:free",
           "messages": [
             {
               "role": "system",
