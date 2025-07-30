@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Bot, User, Menu, Plus, MessageCircle, Globe, Send } from 'lucide-react'
+import { Bot, User, Menu, Plus, MessageCircle, Globe, Send, Trash2 } from 'lucide-react'
 import { INDIAN_LANGUAGES } from '@/lib/ai'
 import Navbar from '@/components/Navbar'
 import Sidebar from '@/components/Sidebar'
@@ -81,6 +81,33 @@ export default function Chat() {
   const startNewChat = () => {
     setMessages([])
     setCurrentSessionId(null)
+  }
+
+  const deleteChat = async (sessionId: string) => {
+    if (!confirm('Are you sure you want to delete this chat?')) return
+    
+    try {
+      const response = await fetch(`/api/chat?sessionId=${sessionId}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        // Remove from UI immediately
+        setChatSessions(prev => prev.filter(session => session.id !== sessionId))
+        
+        // If current chat is deleted, start new chat
+        if (currentSessionId === sessionId) {
+          setMessages([])
+          setCurrentSessionId(null)
+        }
+        
+        toast.success('Chat deleted successfully')
+      } else {
+        toast.error('Failed to delete chat')
+      }
+    } catch (error) {
+      toast.error('Network error')
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -167,20 +194,34 @@ export default function Chat() {
             <h3 className="text-sm font-medium text-gray-500 mb-3">Recent Chats</h3>
             <div className="space-y-2">
               {chatSessions.map((session) => (
-                <button
+                <div
                   key={session.id}
-                  onClick={() => loadChatSession(session.id)}
-                  className={`w-full text-left p-3 rounded-lg transition-colors ${
+                  className={`group relative rounded-lg transition-colors ${
                     currentSessionId === session.id
                       ? 'bg-primary-100 text-primary-700'
                       : 'hover:bg-gray-100'
                   }`}
                 >
-                  <div className="flex items-center space-x-2">
-                    <MessageCircle className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm truncate">{session.title}</span>
-                  </div>
-                </button>
+                  <button
+                    onClick={() => loadChatSession(session.id)}
+                    className="w-full text-left p-3 pr-10"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <MessageCircle className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm truncate">{session.title}</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      deleteChat(session.id)
+                    }}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 opacity-0 group-hover:opacity-100 hover:bg-red-100 rounded transition-all"
+                    title="Delete chat"
+                  >
+                    <Trash2 className="h-3 w-3 text-red-500" />
+                  </button>
+                </div>
               ))}
             </div>
           </div>

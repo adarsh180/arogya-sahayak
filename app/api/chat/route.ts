@@ -118,3 +118,36 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const chatSessionId = searchParams.get('sessionId')
+
+    if (!chatSessionId) {
+      return NextResponse.json({ error: 'Session ID required' }, { status: 400 })
+    }
+
+    // Verify ownership and delete
+    const deletedSession = await prisma.chatSession.deleteMany({
+      where: {
+        id: chatSessionId,
+        userId: session.user.id
+      }
+    })
+
+    if (deletedSession.count === 0) {
+      return NextResponse.json({ error: 'Chat session not found' }, { status: 404 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Chat DELETE error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
