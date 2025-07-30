@@ -1,8 +1,4 @@
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
-
-if (!OPENROUTER_API_KEY) {
-  console.error('OPENROUTER_API_KEY is not configured')
-}
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY!
 
 export interface AIMessage {
   role: 'user' | 'assistant'
@@ -14,71 +10,23 @@ async function delay(ms: number) {
 }
 
 function formatResponse(text: string): string {
-  // Check if text contains tables (lines with multiple | characters)
-  const hasTable = text.split('\n').some(line => 
-    (line.match(/\|/g) || []).length >= 2
-  )
-  
-  if (hasTable) {
-    // Preserve table formatting but clean other markdown
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
-      .replace(/\*(.*?)\*/g, '$1') // Remove italic markdown
-      .replace(/#{1,6}\s/g, '') // Remove headers
-      .replace(/```[\s\S]*?```/g, '') // Remove code blocks
-      .replace(/`([^`]+)`/g, '$1') // Remove inline code
-      .replace(/\n\s*[-*+]\s/g, '\n• ') // Convert lists to bullet points
-      .trim()
-  } else {
-    // Original formatting for non-table content
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
-      .replace(/\*(.*?)\*/g, '$1') // Remove italic markdown
-      .replace(/#{1,6}\s/g, '') // Remove headers
-      .replace(/\|/g, '') // Remove table separators
-      .replace(/```[\s\S]*?```/g, '') // Remove code blocks
-      .replace(/`([^`]+)`/g, '$1') // Remove inline code
-      .replace(/\n\s*[-*+]\s/g, '\n• ') // Convert lists to bullet points
-      .replace(/\n\s*\d+\.\s/g, '\n') // Remove numbered lists
-      .trim()
-  }
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
+    .replace(/\*(.*?)\*/g, '$1') // Remove italic markdown
+    .replace(/#{1,6}\s/g, '') // Remove headers
+    .replace(/\|/g, '') // Remove table separators
+    .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+    .replace(/`([^`]+)`/g, '$1') // Remove inline code
+    .replace(/\n\s*[-*+]\s/g, '\n• ') // Convert lists to bullet points
+    .replace(/\n\s*\d+\.\s/g, '\n') // Remove numbered lists
+    .trim()
 }
 
-export async function callAI(messages: AIMessage[], type: 'medical' | 'student' = 'medical', language = 'en', retries = 3) {
+export async function callAI(messages: AIMessage[], type: 'medical' | 'student' | 'symptom' = 'medical', language = 'en', retries = 3) {
   const systemPrompts = {
-    medical: `You are Arogya Sahayak, an AI medical assistant created by Adarsh Tiwari. Provide clear, helpful medical information with structured formatting. Use tables when presenting comparative data or structured information.
-
-Guidelines:
-- Provide clear explanations with proper structure
-- Use tables for comparisons, symptoms, medications (format: | Column | Data |)
-- Use bullet points for lists
-- Always recommend consulting healthcare professionals
-- Keep responses focused and informative
-
-Example table:
-| Symptom | Mild | Severe |
-|---------|------|--------|
-| Fever | 99-100°F | 103°F+ |
-
-If asked about your creator: "I am Arogya Sahayak, created by Adarsh Tiwari to make medical information accessible across India in 29+ languages."
-
-${language !== 'en' ? `Always respond in ${INDIAN_LANGUAGES[language as keyof typeof INDIAN_LANGUAGES]} language only.` : ''}`,
-    student: `You are an AI medical tutor created by Adarsh Tiwari. Help students with medical concepts and exam preparation using structured formatting and tables.
-
-Guidelines:
-- Explain concepts clearly with proper structure
-- Use tables for classifications, comparisons (format: | Column | Data |)
-- Include exam-focused content when relevant
-- Use bullet points and numbered lists
-
-Example table:
-| System | Function | Disease |
-|--------|----------|--------|
-| Heart | Circulation | CAD |
-
-If asked about creator: "I was developed by Adarsh Tiwari to help medical students prepare for NEET, AIIMS, and other medical exams."
-
-${language !== 'en' ? `Always respond in ${INDIAN_LANGUAGES[language as keyof typeof INDIAN_LANGUAGES]} language only.` : ''}`
+    medical: `You are Arogya Sahayak, a helpful AI medical assistant. Provide clear, simple medical information and home remedies for common conditions like fever, cold, headache. Always suggest consulting a doctor for proper diagnosis. Respond in plain text without any markdown, asterisks, or special characters. Keep responses conversational and easy to understand. ${language !== 'en' ? `Always respond in ${INDIAN_LANGUAGES[language as keyof typeof INDIAN_LANGUAGES]} language only.` : ''}`,
+    student: `You are an AI medical tutor. Help students with medical concepts, exam preparation, and practice questions. Explain topics clearly in simple language without using any markdown, asterisks, hashtags, or special formatting. Make responses educational and easy to follow. ${language !== 'en' ? `Always respond in ${INDIAN_LANGUAGES[language as keyof typeof INDIAN_LANGUAGES]} language only.` : ''}`,
+    symptom: `You are a symptom analysis assistant. Provide clear assessment of symptoms and suggest simple home remedies when appropriate. Always recommend consulting healthcare professionals. Use plain text only, no markdown or special characters. Keep responses practical and reassuring. ${language !== 'en' ? `Always respond in ${INDIAN_LANGUAGES[language as keyof typeof INDIAN_LANGUAGES]} language only.` : ''}`
   }
 
   for (let attempt = 0; attempt < retries; attempt++) {
@@ -87,20 +35,16 @@ ${language !== 'en' ? `Always respond in ${INDIAN_LANGUAGES[language as keyof ty
         await delay(Math.pow(2, attempt) * 1000) // Exponential backoff
       }
 
-      if (!OPENROUTER_API_KEY) {
-        return "AI service is not properly configured. Please check the API key configuration."
-      }
-
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-          "HTTP-Referer": "https://arogya-sahayakl.netlify.app",
+          "HTTP-Referer": "http://arogya-sahayakl.netlify.app",
           "X-Title": "Arogya Sahayak",
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          "model": "microsoft/wizardlm-2-8x22b",
+          "model": "deepseek/deepseek-r1-distill-qwen-32b:free",
           "messages": [
             {
               "role": "system",
@@ -109,16 +53,12 @@ ${language !== 'en' ? `Always respond in ${INDIAN_LANGUAGES[language as keyof ty
             ...messages
           ],
           "temperature": 0.7,
-          "max_tokens": 1000
+          "max_tokens": 500
         })
       })
 
-      if (response.status === 401) {
-        return "AI service authentication failed. Please check API configuration and try again."
-      }
-
       if (response.status === 402) {
-        return "AI service is temporarily unavailable due to billing limits. Please try again later or contact support."
+        return "AI service billing limit reached. Please try again later or contact support."
       }
 
       if (response.status === 429) {
@@ -228,12 +168,9 @@ export const MEDICAL_YEARS = {
 }
 
 export async function translateText(text: string, targetLanguage: string) {
-  if (!targetLanguage || targetLanguage === 'en') return text
+  if (targetLanguage === 'en') return text
 
-  const languageName = INDIAN_LANGUAGES[targetLanguage as keyof typeof INDIAN_LANGUAGES]
-  if (!languageName) return text
-
-  const translatePrompt = `Translate the following medical text to ${languageName} language. Maintain medical accuracy and terminology:\n\n${text}`
+  const translatePrompt = `Translate the following medical text to ${INDIAN_LANGUAGES[targetLanguage as keyof typeof INDIAN_LANGUAGES]} language. Maintain medical accuracy and terminology:\n\n${text}`
 
   try {
     const response = await callAI([{ role: 'user', content: translatePrompt }], 'medical', targetLanguage)
