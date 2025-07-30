@@ -115,7 +115,9 @@ ${language !== 'en' ? `Always respond in ${INDIAN_LANGUAGES[language as keyof ty
       }
 
       if (!response.ok) {
-        throw new Error(`AI API error: ${response.status}`)
+        const errorText = await response.text()
+        console.error(`AI API error ${response.status}:`, errorText)
+        throw new Error(`AI API error: ${response.status} - ${errorText}`)
       }
 
       const data = await response.json()
