@@ -2,9 +2,12 @@
 
 A comprehensive medical AI web application built with Next.js that provides personalized health guidance, symptom checking, diet planning, and medical exam preparation.
 
+## SITE: 
+https://arogya-sahayakl.netlify.app/
+
 ## Features
 
-🧠 **AI Chat Assistant** - Get instant medical guidance powered by Kimi K2 AI
+🧠 **AI Chat Assistant** - Get instant medical guidance
 📊 **Symptom Checker** - Analyze symptoms and get preliminary health assessments  
 🩺 **Medical Profile** - Complete user health profiles with medical history
 📖 **Exam Preparation** - Support for NEET, UPSC, and other medical entrance exams
