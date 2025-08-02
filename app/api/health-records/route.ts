@@ -58,3 +58,36 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json({ error: 'Record ID required' }, { status: 400 })
+    }
+
+    // Verify ownership and delete
+    const deletedRecord = await prisma.healthRecord.deleteMany({
+      where: {
+        id,
+        userId: session.user.id
+      }
+    })
+
+    if (deletedRecord.count === 0) {
+      return NextResponse.json({ error: 'Record not found' }, { status: 404 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Health record deletion error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

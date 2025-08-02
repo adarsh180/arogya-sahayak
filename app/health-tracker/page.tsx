@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Activity, Heart, Scale, Droplet, TrendingUp, Plus, Calendar, Zap, Target, Award } from 'lucide-react'
+import { Activity, Heart, Scale, Droplet, TrendingUp, Plus, Calendar, Zap, Target, Award, Trash2 } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import toast from 'react-hot-toast'
 
@@ -74,6 +74,26 @@ export default function HealthTracker() {
         fetchHealthRecords()
       } else {
         toast.error('Failed to save record')
+      }
+    } catch (error) {
+      toast.error('Network error')
+    }
+  }
+
+  const deleteHealthRecord = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this health record?')) return
+    
+    try {
+      const response = await fetch(`/api/health-records?id=${id}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        // Remove from UI immediately for real-time update
+        setRecords(prev => prev.filter(record => record.id !== id))
+        toast.success('Health record deleted!')
+      } else {
+        toast.error('Failed to delete record')
       }
     } catch (error) {
       toast.error('Network error')
@@ -379,7 +399,7 @@ export default function HealthTracker() {
                   return (
                     <div 
                       key={record.id} 
-                      className={`p-4 bg-gradient-to-r ${bgColor} rounded-xl border border-gray-200/50 dark:border-dark-700/50 hover:shadow-lg transition-all duration-300 transform hover:scale-102 animate-slide-up group`}
+                      className={`relative p-4 bg-gradient-to-r ${bgColor} rounded-xl border border-gray-200/50 dark:border-dark-700/50 hover:shadow-lg transition-all duration-300 transform hover:scale-102 animate-slide-up group`}
                       style={{ animationDelay: `${index * 100}ms` }}
                     >
                       <div className="flex items-center justify-between">
@@ -399,10 +419,22 @@ export default function HealthTracker() {
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                            {displayValue}{record.unit && ` ${record.unit}`}
-                          </p>
+                        <div className="flex items-center space-x-3">
+                          <div className="text-right">
+                            <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                              {displayValue}{record.unit && ` ${record.unit}`}
+                            </p>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              deleteHealthRecord(record.id)
+                            }}
+                            className="opacity-0 group-hover:opacity-100 p-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                            title="Delete record"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
+                          </button>
                         </div>
                       </div>
                     </div>
