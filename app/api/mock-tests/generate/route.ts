@@ -1,81 +1,70 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { callAI } from '@/lib/ai'
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
+    
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { exam, subject, questionCount, difficulty } = await request.json()
+    const { exam, subject, questions = 10 } = await request.json()
 
-    const prompt = `Generate ${questionCount} multiple choice questions for ${exam.toUpperCase()} exam in ${subject} subject.
+    const prompt = `Generate ${questions} multiple choice questions for ${exam} exam in ${subject} subject. 
+    Format as JSON array with this structure:
+    [
+      {
+        "question": "Question text",
+        "options": ["A) Option 1", "B) Option 2", "C) Option 3", "D) Option 4"],
+        "correct": 0,
+        "explanation": "Detailed explanation"
+      }
+    ]`
 
-Requirements:
-- Difficulty level: ${difficulty}
-- Each question should have 4 options (A, B, C, D)
-- Include the correct answer index (0-3)
-- Provide brief explanation for correct answer
-- Questions should be exam-pattern specific
-- Cover different topics within the subject
-- Ensure questions are factually accurate
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'llama3-8b-8192',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+        max_tokens: 4000
+      })
+    })
 
-Format the response as a JSON array with this structure:
-[
-  {
-    "question": "Question text here?",
-    "options": ["Option A", "Option B", "Option C", "Option D"],
-    "correctAnswer": 0,
-    "explanation": "Brief explanation of why this is correct",
-    "difficulty": "medium"
-  }
-]
-
-Generate exactly ${questionCount} questions now:`
-
-    const aiResponse = await callAI([{ role: 'user', content: prompt }], 'student')
-    
-    if (!aiResponse || aiResponse.includes('technical difficulties')) {
-      return NextResponse.json({ error: 'Failed to generate questions' }, { status: 500 })
+    if (!response.ok) {
+      throw new Error('Failed to generate questions')
     }
 
+    const data = await response.json()
+    const content = data.choices[0]?.message?.content
+
     try {
-      const jsonMatch = aiResponse.match(/\[[\s\S]*\]/)
-      if (!jsonMatch) {
-        throw new Error('No valid JSON found in response')
-      }
-
-      const questions = JSON.parse(jsonMatch[0])
-      
-      const questionsWithIds = questions.map((q: any, index: number) => ({
-        ...q,
-        id: `${Date.now()}_${index}`,
-        difficulty: difficulty === 'mixed' ? ['easy', 'medium', 'hard'][index % 3] : difficulty
-      }))
-
-      return NextResponse.json({ questions: questionsWithIds })
+      const questions = JSON.parse(content)
+      return NextResponse.json({ questions })
     } catch (parseError) {
-      const fallbackQuestions = Array.from({ length: questionCount }, (_, i) => ({
-        id: `fallback_${Date.now()}_${i}`,
-        question: `Sample ${subject} question ${i + 1} for ${exam.toUpperCase()} exam?`,
+      // Fallback questions if AI fails
+      const fallbackQuestions = Array.from({ length: questions }, (_, i) => ({
+        question: `Sample ${subject} question ${i + 1} for ${exam}`,
         options: [
-          `Option A for question ${i + 1}`,
-          `Option B for question ${i + 1}`,
-          `Option C for question ${i + 1}`,
-          `Option D for question ${i + 1}`
+          "A) Option 1",
+          "B) Option 2", 
+          "C) Option 3",
+          "D) Option 4"
         ],
-        correctAnswer: i % 4,
-        explanation: `This is the correct answer for question ${i + 1}`,
-        difficulty: difficulty === 'mixed' ? ['easy', 'medium', 'hard'][i % 3] : difficulty
+        correct: Math.floor(Math.random() * 4),
+        explanation: "This is a sample explanation."
       }))
-
+      
       return NextResponse.json({ questions: fallbackQuestions })
     }
   } catch (error) {
-    console.error('Question generation error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error generating questions:', error)
+    return NextResponse.json({ error: 'Failed to generate questions' }, { status: 500 })
   }
 }

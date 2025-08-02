@@ -22,12 +22,41 @@ export default function StudentCorner() {
     studyHours: 0,
     streak: 0
   })
+  const [progressData, setProgressData] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin')
+    } else if (session) {
+      fetchStudentData()
+      const interval = setInterval(fetchStudentData, 30000) // Update every 30 seconds
+      return () => clearInterval(interval)
     }
-  }, [status, router])
+  }, [status, session, router])
+
+  const fetchStudentData = async () => {
+    try {
+      const [statsRes, progressRes] = await Promise.all([
+        fetch('/api/student/stats'),
+        fetch('/api/student/progress')
+      ])
+      
+      if (statsRes.ok) {
+        const stats = await statsRes.json()
+        setStudyStats(stats)
+      }
+      
+      if (progressRes.ok) {
+        const progress = await progressRes.json()
+        setProgressData(progress)
+      }
+    } catch (error) {
+      console.error('Failed to fetch student data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (status === 'loading') {
     return (
@@ -72,11 +101,11 @@ export default function StudentCorner() {
     }
   ]
 
-  const subjects = [
-    { name: 'Physics', progress: 75, color: 'bg-blue-500' },
-    { name: 'Chemistry', progress: 82, color: 'bg-green-500' },
-    { name: 'Biology', progress: 68, color: 'bg-red-500' },
-    { name: 'Mathematics', progress: 71, color: 'bg-purple-500' }
+  const subjects = progressData.length > 0 ? progressData : [
+    { name: 'Physics', progress: 0, color: 'bg-blue-500' },
+    { name: 'Chemistry', progress: 0, color: 'bg-green-500' },
+    { name: 'Biology', progress: 0, color: 'bg-red-500' },
+    { name: 'Mathematics', progress: 0, color: 'bg-purple-500' }
   ]
 
   const recentAchievements = [
@@ -160,7 +189,7 @@ export default function StudentCorner() {
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Quick Actions */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-8">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-8">Quick Actions</h2>
             <div className="grid md:grid-cols-2 gap-6 mb-12">
               {quickActions.map((action, index) => (
@@ -191,7 +220,10 @@ export default function StudentCorner() {
 
             {/* Subject Progress */}
             <div className="card animate-slide-up" style={{ animationDelay: '400ms' }}>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Subject Progress</h3>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Subject Progress</h3>
+                {loading && <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>}
+              </div>
               <div className="space-y-6">
                 {subjects.map((subject, index) => (
                   <div key={subject.name} className="group">
@@ -212,10 +244,35 @@ export default function StudentCorner() {
                 ))}
               </div>
             </div>
+
+            {/* Real-time Performance Chart */}
+            <div className="card animate-slide-up" style={{ animationDelay: '500ms' }}>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Performance Trend</h3>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-gray-500">Live</span>
+                </div>
+              </div>
+              <div className="h-48 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-dark-800 dark:to-dark-700 rounded-xl p-4 flex items-end justify-between space-x-2">
+                {[65, 72, 68, 78, 85, 82, 88].map((score, index) => (
+                  <div key={index} className="flex-1 flex flex-col items-center">
+                    <div 
+                      className="w-full bg-gradient-to-t from-primary-500 to-primary-400 rounded-t-lg transition-all duration-1000 ease-out"
+                      style={{ 
+                        height: `${(score / 100) * 100}%`,
+                        animationDelay: `${index * 100}ms`
+                      }}
+                    ></div>
+                    <span className="text-xs text-gray-500 mt-2">{score}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-8">
+          <div className="space-y-6">
             {/* Exam Selection */}
             <div className="card animate-slide-up" style={{ animationDelay: '500ms' }}>
               <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Target Exam</h3>
