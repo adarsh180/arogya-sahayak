@@ -21,16 +21,16 @@ export async function GET(request: NextRequest) {
     // Fetch real progress from database
     const progressData = await Promise.all(
       subjects.map(async (subject) => {
-        const testResults = await prisma.testResult?.findMany({
+        const testResults = await prisma.mockTest.findMany({
           where: { 
             userId: session.user.id,
             subject: subject.name.toLowerCase()
           },
-          select: { score: true }
-        }) || []
+          select: { score: true, totalQuestions: true }
+        })
         
         const progress = testResults.length > 0
-          ? Math.round(testResults.reduce((sum, test) => sum + test.score, 0) / testResults.length)
+          ? Math.round(testResults.reduce((sum, test) => sum + (test.score / test.totalQuestions * 100), 0) / testResults.length)
           : 0
         
         return {

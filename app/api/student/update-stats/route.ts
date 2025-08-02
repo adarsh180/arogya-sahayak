@@ -15,24 +15,30 @@ export async function POST(request: NextRequest) {
 
     switch (type) {
       case 'test_result':
-        await prisma.testResult?.create({
+        await prisma.mockTest.create({
           data: {
             userId: session.user.id,
-            score: data.score,
+            examType: data.testType || 'mock',
             subject: data.subject,
-            testType: data.testType || 'mock',
-            createdAt: new Date()
+            score: data.score,
+            totalQuestions: data.totalQuestions || 100,
+            correctAnswers: data.correctAnswers || data.score,
+            timeSpent: data.timeSpent || 60,
+            answers: JSON.stringify(data.answers || {})
           }
         })
         break
 
       case 'study_log':
-        await prisma.studyLog?.create({
+        await prisma.studyPlan.create({
           data: {
             userId: session.user.id,
-            duration: data.duration,
+            examType: 'general',
             subject: data.subject,
-            createdAt: new Date()
+            topic: data.topic || 'General Study',
+            scheduledDate: new Date(),
+            duration: data.duration,
+            status: 'completed'
           }
         })
         break

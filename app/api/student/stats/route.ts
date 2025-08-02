@@ -13,19 +13,22 @@ export async function GET(request: NextRequest) {
 
     // Fetch real stats from database
     const [testResults, studyLogs] = await Promise.all([
-      prisma.testResult?.findMany({
+      prisma.mockTest.findMany({
         where: { userId: session.user.id },
-        select: { score: true, createdAt: true }
-      }) || [],
-      prisma.studyLog?.findMany({
-        where: { userId: session.user.id },
+        select: { score: true, totalQuestions: true, completedAt: true }
+      }),
+      prisma.studyPlan.findMany({
+        where: { 
+          userId: session.user.id,
+          status: 'completed'
+        },
         select: { duration: true, createdAt: true }
-      }) || []
+      })
     ])
 
     const totalTests = testResults.length
     const averageScore = totalTests > 0 
-      ? Math.round(testResults.reduce((sum, test) => sum + test.score, 0) / totalTests)
+      ? Math.round(testResults.reduce((sum, test) => sum + (test.score / test.totalQuestions * 100), 0) / totalTests)
       : 0
     
     const studyHours = studyLogs.reduce((sum, log) => sum + (log.duration || 0), 0)
@@ -36,7 +39,10 @@ export async function GET(request: NextRequest) {
     for (let i = 0; i < 30; i++) {
       const checkDate = new Date(today)
       checkDate.setDate(today.getDate() - i)
-      const hasActivity = [...testResults, ...studyLogs].some(item => {
+      const hasActivity = [
+        ...testResults.map(t => ({ createdAt: t.completedAt })),
+        ...studyLogs
+      ].some(item => {
         const itemDate = new Date(item.createdAt)
         return itemDate.toDateString() === checkDate.toDateString()
       })
