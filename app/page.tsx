@@ -8,37 +8,50 @@ import Navbar from '@/components/Navbar'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white overflow-hidden">
+    <div className="min-h-screen bg-white dark:bg-dark-900 theme-transition overflow-hidden">
       <Navbar />
       
       {/* Hero Section */}
-      <section className="relative py-12 lg:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-white to-green-50">
-        {/* Animated Background Elements */}
+      <section className="relative py-16 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary-50 via-white to-medical-50 dark:from-dark-900 dark:via-dark-800 dark:to-dark-900 overflow-hidden theme-transition">
+        {/* Enhanced Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-100 rounded-full opacity-20 animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-green-100 rounded-full opacity-20 animate-pulse" style={{animationDelay: '1s'}}></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-100 rounded-full opacity-10 animate-pulse" style={{animationDelay: '2s'}}></div>
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-r from-blue-200 to-purple-200 rounded-full opacity-20 animate-pulse blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-r from-green-200 to-blue-200 rounded-full opacity-20 animate-pulse blur-3xl" style={{animationDelay: '1s'}}></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-r from-purple-200 to-pink-200 rounded-full opacity-15 animate-pulse blur-3xl" style={{animationDelay: '2s'}}></div>
+          <div className="absolute top-20 left-20 w-32 h-32 bg-blue-300 rounded-full opacity-10 animate-bounce" style={{animationDelay: '0.5s'}}></div>
+          <div className="absolute bottom-20 right-20 w-24 h-24 bg-green-300 rounded-full opacity-10 animate-bounce" style={{animationDelay: '1.5s'}}></div>
         </div>
 
         <div className="max-w-7xl mx-auto text-center relative z-10">
-          {/* Floating Heart Animation */}
-          <div className="flex justify-center mb-8 relative">
-            <div className="relative">
-              <Heart className="h-20 w-20 text-medical-600 animate-bounce" />
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center animate-ping">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
+          {/* Enhanced Floating Heart Animation */}
+          <div className="flex justify-center mb-12 relative">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-pink-400 rounded-full blur-2xl opacity-30 animate-pulse group-hover:opacity-50 transition-opacity duration-300"></div>
+              <div className="relative p-6 bg-gradient-to-r from-red-100 to-pink-100 rounded-full">
+                <Heart className="h-24 w-24 text-red-600 animate-bounce" />
               </div>
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center animate-ping shadow-lg">
+                <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+              </div>
+              <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
             </div>
           </div>
 
-          {/* Main Heading with Typewriter Effect */}
-          <div className="mb-6">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-gray-900 mb-4 animate-fade-in">
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-green-600 bg-clip-text text-transparent">
+          {/* Enhanced Main Heading */}
+          <div className="mb-8">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-black text-gray-900 dark:text-gray-100 mb-6 animate-fade-in">
+              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-green-600 bg-clip-text text-transparent hover:from-purple-600 hover:via-blue-600 hover:to-green-600 transition-all duration-1000">
                 Arogya Sahayak
               </span>
             </h1>
-            <div className="h-1 lg:h-2 w-24 lg:w-32 bg-gradient-to-r from-blue-500 to-green-500 mx-auto rounded-full animate-slide-up"></div>
+            <div className="flex justify-center mb-4">
+              <div className="h-2 lg:h-3 w-32 lg:w-48 bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 mx-auto rounded-full animate-slide-up shadow-lg">
+                <div className="h-full bg-gradient-to-r from-white/30 to-transparent rounded-full animate-pulse"></div>
+              </div>
+            </div>
+            <p className="text-lg lg:text-xl text-gray-500 dark:text-gray-400 font-medium animate-fade-in" style={{animationDelay: '0.5s'}}>
+              🇮🇳 India's Most Advanced AI Medical Assistant
+            </p>
           </div>
 
           <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 mb-6 lg:mb-8 max-w-4xl mx-auto leading-relaxed animate-fade-in px-4">
@@ -46,56 +59,70 @@ export default function Home() {
             medical education, and health management in <span className="font-semibold text-green-600">29+ Indian languages</span>
           </p>
 
-          {/* Stats Counter Animation */}
-          <div className="flex flex-wrap justify-center gap-8 mb-12 animate-fade-in">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600 mb-1">10K+</div>
-              <div className="text-sm text-gray-600">Happy Users</div>
+          {/* Enhanced Stats Counter Animation */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8 mb-16 animate-fade-in" style={{animationDelay: '0.8s'}}>
+            <div className="text-center group">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-blue-200/50 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                <div className="text-4xl font-black text-blue-600 mb-2 group-hover:scale-110 transition-transform duration-300">10K+</div>
+                <div className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Happy Users</div>
+                <div className="w-8 h-1 bg-blue-500 mx-auto mt-2 rounded-full"></div>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-600 mb-1">29+</div>
-              <div className="text-sm text-gray-600">Languages</div>
+            <div className="text-center group">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-green-200/50 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                <div className="text-4xl font-black text-green-600 mb-2 group-hover:scale-110 transition-transform duration-300">29+</div>
+                <div className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Languages</div>
+                <div className="w-8 h-1 bg-green-500 mx-auto mt-2 rounded-full"></div>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-purple-600 mb-1">24/7</div>
-              <div className="text-sm text-gray-600">Available</div>
+            <div className="text-center group">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-purple-200/50 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                <div className="text-4xl font-black text-purple-600 mb-2 group-hover:scale-110 transition-transform duration-300">24/7</div>
+                <div className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Available</div>
+                <div className="w-8 h-1 bg-purple-500 mx-auto mt-2 rounded-full"></div>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-red-600 mb-1">99%</div>
-              <div className="text-sm text-gray-600">Accuracy</div>
+            <div className="text-center group">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-red-200/50 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                <div className="text-4xl font-black text-red-600 mb-2 group-hover:scale-110 transition-transform duration-300">99%</div>
+                <div className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Accuracy</div>
+                <div className="w-8 h-1 bg-red-500 mx-auto mt-2 rounded-full"></div>
+              </div>
             </div>
           </div>
 
-          {/* CTA Buttons with Hover Effects */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-slide-up">
-            <Link href="/dashboard" className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-4 px-8 rounded-full text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+          {/* Enhanced CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16 animate-slide-up" style={{animationDelay: '1s'}}>
+            <Link href="/dashboard" className="group relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 text-white font-bold py-5 px-10 rounded-2xl text-xl transition-all duration-500 hover:scale-110 hover:shadow-2xl transform hover:rotate-1">
               <span className="relative z-10 flex items-center justify-center">
-                <Zap className="h-5 w-5 mr-2" />
+                <Zap className="h-6 w-6 mr-3 group-hover:animate-pulse" />
                 Start Your Health Journey
-                <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="h-6 w-6 ml-3 group-hover:translate-x-2 transition-transform duration-300" />
               </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-blue-600 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
             </Link>
             
-            <Link href="/chat" className="group bg-white text-gray-800 font-semibold py-4 px-8 rounded-full text-lg border-2 border-gray-200 hover:border-blue-300 transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center">
-              <Play className="h-5 w-5 mr-2 text-blue-600" />
-              Watch Demo
+            <Link href="/chat" className="group bg-white/90 backdrop-blur-sm text-gray-800 font-bold py-5 px-10 rounded-2xl text-xl border-2 border-gray-300 hover:border-blue-400 transition-all duration-500 hover:scale-110 hover:shadow-2xl flex items-center justify-center transform hover:-rotate-1">
+              <Play className="h-6 w-6 mr-3 text-blue-600 group-hover:animate-pulse" />
+              Try AI Assistant
+              <div className="ml-3 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             </Link>
           </div>
 
-          {/* Trust Indicators */}
-          <div className="flex flex-wrap justify-center items-center gap-6 text-sm text-gray-500 animate-fade-in">
-            <div className="flex items-center">
-              <Shield className="h-4 w-4 mr-2 text-green-500" />
-              <span>HIPAA Compliant</span>
+          {/* Enhanced Trust Indicators */}
+          <div className="flex flex-wrap justify-center items-center gap-8 animate-fade-in" style={{animationDelay: '1.2s'}}>
+            <div className="flex items-center bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full shadow-lg border border-green-200/50 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+              <Shield className="h-5 w-5 mr-3 text-green-500" />
+              <span className="font-semibold text-gray-700">HIPAA Compliant</span>
             </div>
-            <div className="flex items-center">
-              <Award className="h-4 w-4 mr-2 text-blue-500" />
-              <span>AI Certified</span>
+            <div className="flex items-center bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full shadow-lg border border-blue-200/50 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+              <Award className="h-5 w-5 mr-3 text-blue-500" />
+              <span className="font-semibold text-gray-700">AI Certified</span>
             </div>
-            <div className="flex items-center">
-              <Star className="h-4 w-4 mr-2 text-yellow-500" />
-              <span>4.9/5 Rating</span>
+            <div className="flex items-center bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full shadow-lg border border-yellow-200/50 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+              <Star className="h-5 w-5 mr-3 text-yellow-500 fill-current" />
+              <span className="font-semibold text-gray-700">4.9/5 Rating</span>
             </div>
           </div>
         </div>

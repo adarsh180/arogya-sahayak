@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 * {
   font-family: 'Inter', sans-serif;
@@ -14,50 +14,136 @@
   }
   
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-gray-50 text-gray-900 transition-colors duration-300;
+  }
+  
+  .dark body {
+    @apply bg-dark-900 text-gray-100;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100 dark:bg-dark-800;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-dark-600 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400 dark:bg-dark-500;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+    @apply bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl;
+  }
+  
+  .dark .btn-primary {
+    @apply from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700;
   }
   
   .btn-secondary {
-    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+    @apply bg-white hover:bg-gray-50 text-gray-800 font-semibold py-3 px-6 rounded-xl border-2 border-gray-200 hover:border-primary-300 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg;
+  }
+  
+  .dark .btn-secondary {
+    @apply bg-dark-800 hover:bg-dark-700 text-gray-200 border-dark-600 hover:border-primary-500;
   }
   
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+    @apply bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6 hover:shadow-2xl transition-all duration-300;
+  }
+  
+  .dark .card {
+    @apply bg-dark-800/90 border-dark-700/50 shadow-2xl;
   }
   
   .input-field {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+    @apply w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white/90 backdrop-blur-sm transition-all duration-300 text-gray-900;
+  }
+  
+  .dark .input-field {
+    @apply border-dark-600 bg-dark-800/90 text-gray-100 focus:ring-primary-400;
   }
   
   .chat-message {
-    @apply p-4 rounded-lg mb-4 max-w-3xl;
+    @apply p-4 rounded-2xl mb-4 max-w-4xl shadow-lg backdrop-blur-sm transition-all duration-300;
   }
   
   .chat-user {
-    @apply bg-primary-100 ml-auto;
+    @apply bg-gradient-to-r from-primary-600 to-primary-700 text-white ml-auto;
+  }
+  
+  .dark .chat-user {
+    @apply from-primary-500 to-primary-600;
   }
   
   .chat-assistant {
-    @apply bg-gray-100 mr-auto;
+    @apply bg-white/95 text-gray-800 border border-gray-200 mr-auto;
+  }
+  
+  .dark .chat-assistant {
+    @apply bg-dark-800/95 text-gray-100 border-dark-700;
   }
   
   .nav-item {
-    @apply text-gray-700 hover:text-primary-600 transition-colors duration-200;
+    @apply text-gray-700 hover:text-primary-600 transition-all duration-300 font-medium;
+  }
+  
+  .dark .nav-item {
+    @apply text-gray-300 hover:text-primary-400;
   }
   
   .sidebar {
-    @apply bg-white border-r border-gray-200;
+    @apply bg-white/90 backdrop-blur-sm border-r border-gray-200/50 shadow-lg;
+  }
+  
+  .dark .sidebar {
+    @apply bg-dark-900/90 border-dark-700/50;
   }
   
   .header {
-    @apply bg-white border-b border-gray-200;
+    @apply bg-white/90 backdrop-blur-sm border-b border-gray-200/50 shadow-sm;
   }
+  
+  .dark .header {
+    @apply bg-dark-900/90 border-dark-700/50;
+  }
+  
+  .glass-card {
+    @apply bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl;
+  }
+  
+  .dark .glass-card {
+    @apply bg-dark-800/20 border-dark-600/30;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary-600 to-medical-600 bg-clip-text text-transparent;
+  }
+  
+  .dark .gradient-text {
+    @apply from-primary-400 to-medical-400;
+  }
+  
+  .theme-transition {
+    @apply transition-colors duration-300 ease-in-out;
+  }
+}
+
+.loading-dots {
+  display: inline-block;
+}
+
+.loading-dots::after {
+  content: '';
+  animation: dots 1.5s steps(5, end) infinite;
 }
 
 .loading-dots {
@@ -74,4 +160,72 @@
   40% { content: '.'; }
   60% { content: '..'; }
   80%, 100% { content: '...'; }
+}
+
+/* Enhanced animations */
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass-effect {
+  background: rgba(15, 23, 42, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.text-shadow {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dark .text-shadow {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.dark .hover-lift:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Smooth page transitions */
+.page-transition {
+  animation: pageEnter 0.6s ease-out;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced focus styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-white;
+}
+
+.dark .focus-ring {
+  @apply focus:ring-offset-dark-900;
 }

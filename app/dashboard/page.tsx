@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { 
   Heart, Activity, Calendar, Users, FileText, Pill, 
-  Phone, BookOpen, TrendingUp, Clock, AlertCircle 
+  Phone, BookOpen, TrendingUp, Clock, AlertCircle, ArrowRight 
 } from 'lucide-react'
 import Navbar from '@/components/Navbar'
+import HealthTipsSection from '@/components/HealthTipsSection'
 import Link from 'next/link'
 
 export default function Dashboard() {
@@ -98,74 +99,84 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-medical-50 dark:from-dark-900 dark:via-dark-800 dark:to-dark-900 theme-transition page-transition">
       <Navbar />
       
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="mb-12 text-center animate-fade-in">
+          <div className="relative mb-6">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full blur-xl opacity-20 animate-pulse"></div>
+            <div className="relative p-4 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full w-20 h-20 mx-auto flex items-center justify-center">
+              <Heart className="h-10 w-10 text-blue-600 animate-bounce" />
+            </div>
+          </div>
+          <h1 className="text-4xl lg:text-5xl font-bold gradient-text mb-4">
             Welcome back, {session?.user?.name || 'User'}!
           </h1>
-          <p className="text-gray-600">
-            Your comprehensive health dashboard
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            Your comprehensive AI-powered health dashboard
           </p>
         </div>
 
         {/* Health Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="card">
-            <div className="flex items-center">
-              <div className="p-3 bg-blue-100 rounded-full">
-                <Activity className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">BMI</p>
-                <p className="text-2xl font-semibold text-gray-900">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <div className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6 hover:shadow-2xl transition-all duration-300 transform hover:scale-105 animate-slide-up">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">BMI Index</p>
+                <p className="text-3xl font-bold text-gray-900">
                   {healthStats.bmi || 'N/A'}
                 </p>
+                <p className="text-sm text-blue-600 font-medium mt-1">Body Mass Index</p>
+              </div>
+              <div className="p-4 bg-gradient-to-r from-blue-100 to-blue-200 rounded-2xl group-hover:from-blue-200 group-hover:to-blue-300 transition-all duration-300">
+                <Activity className="h-8 w-8 text-blue-600" />
               </div>
             </div>
           </div>
 
-          <div className="card">
-            <div className="flex items-center">
-              <div className="p-3 bg-green-100 rounded-full">
-                <Heart className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Last Checkup</p>
-                <p className="text-2xl font-semibold text-gray-900">
+          <div className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6 hover:shadow-2xl transition-all duration-300 transform hover:scale-105 animate-slide-up" style={{ animationDelay: '100ms' }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">Last Checkup</p>
+                <p className="text-2xl font-bold text-gray-900">
                   {healthStats.lastCheckup || 'None'}
                 </p>
+                <p className="text-sm text-green-600 font-medium mt-1">Health Record</p>
+              </div>
+              <div className="p-4 bg-gradient-to-r from-green-100 to-green-200 rounded-2xl group-hover:from-green-200 group-hover:to-green-300 transition-all duration-300">
+                <Heart className="h-8 w-8 text-green-600" />
               </div>
             </div>
           </div>
 
-          <div className="card">
-            <div className="flex items-center">
-              <div className="p-3 bg-purple-100 rounded-full">
-                <Pill className="h-6 w-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Medications</p>
-                <p className="text-2xl font-semibold text-gray-900">
+          <div className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6 hover:shadow-2xl transition-all duration-300 transform hover:scale-105 animate-slide-up" style={{ animationDelay: '200ms' }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">Medications</p>
+                <p className="text-3xl font-bold text-gray-900">
                   {healthStats.medications}
                 </p>
+                <p className="text-sm text-purple-600 font-medium mt-1">Active Prescriptions</p>
+              </div>
+              <div className="p-4 bg-gradient-to-r from-purple-100 to-purple-200 rounded-2xl group-hover:from-purple-200 group-hover:to-purple-300 transition-all duration-300">
+                <Pill className="h-8 w-8 text-purple-600" />
               </div>
             </div>
           </div>
 
-          <div className="card">
-            <div className="flex items-center">
-              <div className="p-3 bg-orange-100 rounded-full">
-                <Calendar className="h-6 w-6 text-orange-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Appointments</p>
-                <p className="text-2xl font-semibold text-gray-900">
+          <div className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6 hover:shadow-2xl transition-all duration-300 transform hover:scale-105 animate-slide-up" style={{ animationDelay: '300ms' }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">Appointments</p>
+                <p className="text-3xl font-bold text-gray-900">
                   {healthStats.appointments}
                 </p>
+                <p className="text-sm text-orange-600 font-medium mt-1">Scheduled Visits</p>
+              </div>
+              <div className="p-4 bg-gradient-to-r from-orange-100 to-orange-200 rounded-2xl group-hover:from-orange-200 group-hover:to-orange-300 transition-all duration-300">
+                <Calendar className="h-8 w-8 text-orange-600" />
               </div>
             </div>
           </div>
@@ -174,24 +185,28 @@ export default function Dashboard() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Quick Actions */}
           <div className="lg:col-span-2">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-              {quickActions.map((action) => (
+            <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center lg:text-left">Quick Actions</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-12">
+              {quickActions.map((action, index) => (
                 <Link
                   key={action.name}
                   href={action.href}
-                  className="card hover:shadow-lg transition-all duration-200 text-center group"
+                  className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6 hover:shadow-2xl transition-all duration-300 transform hover:scale-105 text-center animate-slide-up"
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="w-16 h-16 mx-auto mb-3 group-hover:scale-110 transition-transform">
-                    <Image
-                      src={action.image}
-                      alt={action.name}
-                      width={64}
-                      height={64}
-                      className="w-full h-full object-contain rounded-2xl"
-                    />
+                  <div className="relative mb-4">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-2xl blur-lg opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                    <div className="relative w-16 h-16 mx-auto group-hover:scale-110 transition-transform duration-300">
+                      <Image
+                        src={action.image}
+                        alt={action.name}
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-contain rounded-2xl"
+                      />
+                    </div>
                   </div>
-                  <h3 className="font-medium text-gray-900 text-sm">{action.name}</h3>
+                  <h3 className="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors duration-300">{action.name}</h3>
                 </Link>
               ))}
             </div>
@@ -232,11 +247,17 @@ export default function Dashboard() {
 
           {/* Recent Health Records */}
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Health Records</h2>
-            <div className="card">
-              <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center lg:text-left">Recent Health Records</h2>
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6">
+              <div className="space-y-6">
                 {recentRecords.length === 0 ? (
-                  <p className="text-gray-500 text-center py-4">No health records yet</p>
+                  <div className="text-center py-12">
+                    <div className="p-4 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                      <TrendingUp className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <p className="text-gray-500 font-medium">No health records yet</p>
+                    <p className="text-sm text-gray-400 mt-2">Start tracking your health metrics</p>
+                  </div>
                 ) : (
                   recentRecords.map((record) => {
                     let displayValue = record.value
@@ -329,17 +350,23 @@ export default function Dashboard() {
               } catch (e) {}
               return false
             }) && (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold text-red-700 mb-3">⚠️ Health Alerts</h3>
-                <div className="card bg-gradient-to-r from-red-50 to-orange-50 border-red-200">
-                  <div className="flex items-start space-x-3">
-                    <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+              <div className="mt-8">
+                <h3 className="text-xl font-bold text-red-700 mb-4 flex items-center">
+                  <AlertCircle className="h-6 w-6 mr-2" />
+                  Health Alerts
+                </h3>
+                <div className="bg-gradient-to-r from-red-50 to-orange-50 backdrop-blur-sm rounded-2xl border-2 border-red-200 p-6 shadow-lg">
+                  <div className="flex items-start space-x-4">
+                    <div className="p-3 bg-red-100 rounded-full">
+                      <AlertCircle className="h-6 w-6 text-red-600" />
+                    </div>
                     <div>
-                      <p className="text-sm text-red-700 font-medium mb-2">
+                      <p className="text-red-700 font-semibold mb-3">
                         Some of your recent health readings are outside normal ranges.
                       </p>
-                      <Link href="/health-tracker" className="text-xs text-red-600 underline">
-                        View detailed analysis →
+                      <Link href="/health-tracker" className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-300 font-medium">
+                        View detailed analysis
+                        <ArrowRight className="h-4 w-4 ml-2" />
                       </Link>
                     </div>
                   </div>
@@ -347,22 +374,19 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Health Tips */}
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Today's Health Tip</h3>
-              <div className="card bg-gradient-to-r from-blue-50 to-green-50">
-                <div className="flex items-start space-x-3">
-                  <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-700">
-                      Drink at least 8 glasses of water daily to maintain proper hydration and support your body's natural functions.
-                    </p>
-                  </div>
-                </div>
-              </div>
+            {/* AI Health Tips */}
+            <div className="mt-8">
+              <HealthTipsSection />
             </div>
           </div>
         </div>
+      </div>
+      
+      {/* Floating Background Elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full opacity-10 animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 rounded-full opacity-10 animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/4 w-60 h-60 bg-green-200 rounded-full opacity-5 animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
     </div>
   )
