@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Activity, Heart, Scale, Droplet, TrendingUp, Plus, Calendar, Zap, Target, Award, Trash2 } from 'lucide-react'
+import { Activity, Heart, Scale, Droplet, TrendingUp, Plus, Calendar, Zap, Target, Award, Trash2, Brain, AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import toast from 'react-hot-toast'
 
@@ -19,6 +19,8 @@ export default function HealthTracker() {
     heartRate: ''
   })
   const [records, setRecords] = useState<any[]>([])
+  const [analysis, setAnalysis] = useState<any>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -72,11 +74,33 @@ export default function HealthTracker() {
       if (response.ok) {
         toast.success('Health record saved!')
         fetchHealthRecords()
+        // Get AI analysis
+        await getAIAnalysis(type, value)
       } else {
         toast.error('Failed to save record')
       }
     } catch (error) {
       toast.error('Network error')
+    }
+  }
+
+  const getAIAnalysis = async (type: string, value: any) => {
+    setIsAnalyzing(true)
+    try {
+      const response = await fetch('/api/health-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, value })
+      })
+      
+      if (response.ok) {
+        const analysisData = await response.json()
+        setAnalysis(analysisData)
+      }
+    } catch (error) {
+      console.error('Analysis error:', error)
+    } finally {
+      setIsAnalyzing(false)
     }
   }
 
@@ -157,6 +181,66 @@ export default function HealthTracker() {
             ))}
           </div>
         </div>
+
+        {/* AI Analysis Section */}
+        {(analysis || isAnalyzing) && (
+          <div className="mb-8 animate-slide-up">
+            <div className="card hover-lift bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="p-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl text-white">
+                  <Brain className="h-6 w-6" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">AI Health Analysis</h2>
+              </div>
+              
+              {isAnalyzing ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600 dark:text-gray-400">Analyzing your health data...</p>
+                </div>
+              ) : analysis && (
+                <div className="space-y-4">
+                  <div className={`p-4 rounded-xl border-2 ${
+                    analysis.status === 'normal' ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' :
+                    analysis.status === 'warning' ? 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800' :
+                    'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800'
+                  }`}>
+                    <div className="flex items-start space-x-3">
+                      <div className={`p-2 rounded-lg ${
+                        analysis.status === 'normal' ? 'bg-green-100 dark:bg-green-800' :
+                        analysis.status === 'warning' ? 'bg-yellow-100 dark:bg-yellow-800' :
+                        'bg-red-100 dark:bg-red-800'
+                      }`}>
+                        {analysis.status === 'normal' && <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />}
+                        {analysis.status === 'warning' && <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />}
+                        {analysis.status === 'danger' && <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className={`font-bold text-lg mb-2 ${
+                          analysis.status === 'normal' ? 'text-green-800 dark:text-green-200' :
+                          analysis.status === 'warning' ? 'text-yellow-800 dark:text-yellow-200' :
+                          'text-red-800 dark:text-red-200'
+                        }`}>
+                          {analysis.message}
+                        </h3>
+                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                          {analysis.suggestion}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => setAnalysis(null)}
+                    className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 dark:bg-dark-700 dark:hover:bg-dark-600 rounded-lg transition-colors text-gray-700 dark:text-gray-300"
+                  >
+                    Dismiss Analysis
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Input Form */}
