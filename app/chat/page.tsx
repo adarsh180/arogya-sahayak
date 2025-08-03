@@ -50,6 +50,7 @@ export default function Chat() {
   const [chatSessions, setChatSessions] = useState<any[]>([])
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -308,12 +309,15 @@ export default function Chat() {
     <div className="h-screen bg-white dark:bg-gray-900 flex flex-col">
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-        <div className="flex items-center space-x-3">
+        <button
+          onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+          className="flex items-center space-x-3"
+        >
           <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
             <Stethoscope className="h-4 w-4 text-white" />
           </div>
           <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Arogya Sahayak</h1>
-        </div>
+        </button>
         <button
           onClick={startNewChat}
           className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -325,8 +329,78 @@ export default function Chat() {
       </div>
 
       <div className="flex flex-1 overflow-hidden">
+        {/* Mobile Sidebar Overlay */}
+        {mobileSidebarOpen && (
+          <div className="md:hidden fixed inset-0 z-50 flex">
+            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setMobileSidebarOpen(false)}></div>
+            <div className="relative w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={startNewChat}
+                    className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-lg hover:from-blue-700 hover:to-green-700 transition-all duration-300 font-medium text-sm mr-2"
+                  >
+                    <span>+ New Chat</span>
+                  </button>
+                  <button
+                    onClick={() => setMobileSidebarOpen(false)}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-4">
+                <h3 className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-3 uppercase tracking-wide">Recent Conversations</h3>
+                <div className="space-y-2">
+                  {chatSessions.map((session) => (
+                    <div key={session.id} className={`group relative rounded-lg transition-all duration-300 ${
+                      currentSessionId === session.id
+                        ? 'bg-blue-100 dark:bg-blue-900/50 shadow-md'
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}>
+                      <button
+                        onClick={() => {
+                          loadChatSession(session.id)
+                          setMobileSidebarOpen(false)
+                        }}
+                        className="w-full text-left p-3 pr-8"
+                      >
+                        <div className="flex items-start space-x-2">
+                          <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
+                            currentSessionId === session.id 
+                              ? 'bg-blue-500 text-white' 
+                              : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+                          }`}>
+                            <Stethoscope className="h-3 w-3" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">
+                              {session.title || 'New conversation'}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {new Date(session.updatedAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => deleteChat(session.id)}
+                        className="absolute right-1 top-1/2 transform -translate-y-1/2 p-1 opacity-0 group-hover:opacity-100 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-all duration-200"
+                      >
+                        <X className="h-3 w-3 text-red-500" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Desktop Sidebar */}
-        <div className={`hidden md:flex ${sidebarCollapsed ? 'w-16' : 'w-80'} bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-col transition-all duration-300`}>
+        <div className={`hidden md:flex ${sidebarCollapsed ? 'w-0' : 'w-80'} bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-col transition-all duration-300 overflow-hidden`}>
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
             <div className="flex items-center space-x-2">
               <button
