@@ -305,12 +305,28 @@ export default function Chat() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-500">
-      <Navbar />
-      
-      <div className="flex h-[calc(100vh-4rem)]">
-        {/* Chat History Sidebar */}
-        <div className={`${sidebarCollapsed ? 'w-16' : 'w-80'} bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300`}>
+    <div className="h-screen bg-white dark:bg-gray-900 flex flex-col">
+      {/* Mobile Header */}
+      <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
+            <Stethoscope className="h-4 w-4 text-white" />
+          </div>
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Arogya Sahayak</h1>
+        </div>
+        <button
+          onClick={startNewChat}
+          className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* Desktop Sidebar */}
+        <div className={`hidden md:flex ${sidebarCollapsed ? 'w-16' : 'w-80'} bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-col transition-all duration-300`}>
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
             <div className="flex items-center space-x-2">
               <button
@@ -378,31 +394,28 @@ export default function Chat() {
         </div>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
-          {/* Header */}
-          <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex-shrink-0">
+        <div className="flex-1 flex flex-col">
+          {/* Desktop Header */}
+          <div className="hidden md:block bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center">
-                    <Stethoscope className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center">
+                  <Stethoscope className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Medical AI Assistant</h1>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Trusted healthcare insights • Document analysis</p>
+                  <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Medical AI Assistant</h1>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Trusted healthcare insights</p>
                 </div>
               </div>
-              <div className="hidden md:flex items-center space-x-3">
-                <div className="px-3 py-1 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-full text-xs font-medium flex items-center space-x-1">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>AI Online</span>
+              <div className="flex items-center space-x-3">
+                <div className="px-2 py-1 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-full text-xs font-medium flex items-center space-x-1">
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                  <span>Online</span>
                 </div>
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-2 py-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   {Object.entries(INDIAN_LANGUAGES).slice(0, 5).map(([code, name]) => (
                     <option key={code} value={code}>{name.split(' ')[0]}</option>
@@ -413,178 +426,120 @@ export default function Chat() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto">
             {messages.length === 0 && (
-              <div className="text-center py-20 animate-fade-in">
-                <div className="relative mb-8">
-                  <div className="w-32 h-32 bg-gradient-to-br from-blue-100 to-green-100 dark:from-blue-900/30 dark:to-green-900/30 rounded-3xl flex items-center justify-center mx-auto shadow-2xl">
-                    <Stethoscope className="h-16 w-16 text-blue-600 dark:text-blue-400" />
+              <div className="h-full flex items-center justify-center p-4">
+                <div className="text-center max-w-md">
+                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-100 to-green-100 dark:from-blue-900/30 dark:to-green-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Stethoscope className="h-8 w-8 md:h-10 md:w-10 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
-                    <Heart className="h-4 w-4 text-white" />
-                  </div>
-                </div>
-                <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Welcome to Your Medical AI</h3>
-                <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto text-lg leading-relaxed mb-12">
-                  Upload medical documents, ask about symptoms, or get health guidance. 
-                  I analyze your information with medical expertise and provide trustworthy insights.
-                </p>
-                
-                <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-                  <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm p-6 rounded-2xl border border-blue-200/50 dark:border-gray-700/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                      <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Document Analysis</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Upload lab reports, prescriptions, and medical documents for detailed analysis</p>
-                  </div>
-                  
-                  <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm p-6 rounded-2xl border border-green-200/50 dark:border-gray-700/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-                    <div className="w-12 h-12 bg-green-100 dark:bg-green-900/50 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                      <Activity className="h-6 w-6 text-green-600 dark:text-green-400" />
-                    </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Symptom Guidance</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Describe symptoms and get preliminary health assessments and recommendations</p>
-                  </div>
-                  
-                  <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm p-6 rounded-2xl border border-purple-200/50 dark:border-gray-700/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-                    <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/50 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                      <Brain className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Health Insights</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Get personalized health advice and understand medical information better</p>
-                  </div>
+                  <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Arogya Sahayak</h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
+                    Your AI medical assistant. Ask about symptoms, health concerns, or upload medical documents.
+                  </p>
                 </div>
               </div>
             )}
 
-            {messages.map((message, index) => (
-              <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`} style={{ animationDelay: `${index * 100}ms` }}>
-                <div className={`flex space-x-4 max-w-4xl ${message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg ${
-                    message.role === 'user' 
-                      ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white' 
-                      : 'bg-gradient-to-br from-green-500 to-green-600 text-white'
-                  }`}>
-                    {message.role === 'user' ? <User className="h-6 w-6" /> : <Stethoscope className="h-6 w-6" />}
-                  </div>
-                  <div className={`rounded-2xl px-6 py-4 max-w-3xl shadow-lg ${
-                    message.role === 'user'
-                      ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
-                      : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700'
-                  }`}>
-                    {message.attachments && message.attachments.length > 0 && (
-                      <div className="mb-4 space-y-2">
-                        {message.attachments.map((file) => (
-                          <div key={file.id} className={`flex items-center space-x-3 p-3 rounded-xl ${
-                            message.role === 'user' ? 'bg-white/20' : 'bg-gray-100 dark:bg-gray-700'
-                          }`}>
-                            {file.type.startsWith('image/') ? (
-                              <ImageIcon className={`h-5 w-5 ${message.role === 'user' ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`} />
-                            ) : (
-                              <FileText className={`h-5 w-5 ${message.role === 'user' ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`} />
-                            )}
-                            <span className={`text-sm font-medium truncate ${message.role === 'user' ? 'text-white' : 'text-gray-900 dark:text-gray-100'}`}>{file.name}</span>
-                            <span className={`text-xs ${message.role === 'user' ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'}`}>{(file.size / 1024).toFixed(1)} KB</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <MessageRenderer content={message.content} role={message.role} />
+            <div className="px-4 py-4 space-y-4">
+              {messages.map((message, index) => (
+                <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`flex space-x-3 max-w-[85%] sm:max-w-2xl ${message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      message.role === 'user' 
+                        ? 'bg-blue-600' 
+                        : 'bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                    }`}>
+                      {message.role === 'user' ? (
+                        <User className="h-4 w-4 text-white" />
+                      ) : (
+                        <Stethoscope className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                      )}
+                    </div>
+                    <div className={`rounded-2xl px-4 py-3 max-w-full ${
+                      message.role === 'user'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700'
+                    }`}>
+                      {message.attachments && message.attachments.length > 0 && (
+                        <div className="mb-3 space-y-2">
+                          {message.attachments.map((file) => (
+                            <div key={file.id} className={`flex items-center space-x-2 p-2 rounded-lg text-xs ${
+                              message.role === 'user' ? 'bg-white/20' : 'bg-gray-200 dark:bg-gray-700'
+                            }`}>
+                              {file.type.startsWith('image/') ? (
+                                <ImageIcon className="h-3 w-3" />
+                              ) : (
+                                <FileText className="h-3 w-3" />
+                              )}
+                              <span className="truncate">{file.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <MessageRenderer content={message.content} role={message.role} />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
 
-            {isLoading && (
-              <div className="flex justify-start animate-fade-in">
-                <div className="flex space-x-4 max-w-4xl">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg">
-                    <Stethoscope className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-6 py-4 shadow-lg">
-                    <div className="flex items-center space-x-3">
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="flex space-x-3 max-w-2xl">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center">
+                      <Stethoscope className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                    </div>
+                    <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-3 border border-gray-200 dark:border-gray-700">
                       <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                       </div>
-                      <span className="text-gray-700 dark:text-gray-300 font-medium">Analyzing your medical query...</span>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             <div ref={messagesEndRef} />
           </div>
 
           {/* Input Area */}
-          <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
-            {uploadedFiles.length > 0 && (
-              <div className="mb-3 space-y-2">
-                <h4 className="text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center space-x-1">
-                  <FileCheck className="h-3 w-3" />
-                  <span>Files</span>
-                </h4>
-                {uploadedFiles.map((file) => (
-                  <div key={file.id} className="flex items-center space-x-2 p-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600">
-                    <div className="w-6 h-6 bg-white dark:bg-gray-800 rounded-md flex items-center justify-center">
-                      {file.type.startsWith('image/') ? (
-                        <ImageIcon className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                      ) : (
-                        <FileText className="h-3 w-3 text-green-600 dark:text-green-400" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">{file.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{(file.size / 1024).toFixed(1)} KB</p>
-                    </div>
-                    <button
-                      onClick={() => removeFile(file.id)}
-                      className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors duration-200"
-                    >
-                      <X className="h-3 w-3 text-gray-400 hover:text-red-500" />
-                    </button>
-                  </div>
-                ))}
+          <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+            <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
+              <div className="flex space-x-3">
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Ask about symptoms, health concerns..."
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute right-12 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                    disabled={isLoading || isUploading}
+                  >
+                    {isUploading ? (
+                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <Paperclip className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                    )}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading || !input.trim()}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Send className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="flex space-x-3">
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask about health, symptoms, or upload documents..."
-                  className="w-full px-4 py-3 pr-12 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-300"
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded transition-all duration-200"
-                  disabled={isLoading || isUploading}
-                  title="Upload PDF, image, or document"
-                >
-                  {isUploading ? (
-                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <Paperclip className="h-4 w-4 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400" />
-                  )}
-                </button>
-              </div>
-              <button
-                type="submit"
-                disabled={isLoading || !input.trim()}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 disabled:from-gray-300 disabled:to-gray-400 dark:disabled:from-gray-600 dark:disabled:to-gray-700 text-white rounded-lg transition-all duration-300 flex items-center space-x-2 font-medium"
-              >
-                <Send className="h-4 w-4" />
-                <span className="hidden sm:inline">Send</span>
-              </button>
             </form>
-
+            
             <input
               ref={fileInputRef}
               type="file"
@@ -593,61 +548,14 @@ export default function Chat() {
               onChange={handleFileUpload}
               className="hidden"
             />
-
-            {/* Medical Disclaimer */}
-            <div className="mt-2 px-2 py-1 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded text-center">
-              <p className="text-xs text-amber-700 dark:text-amber-300">
-                ⚠️ AI for information only • Not medical advice • Consult healthcare providers
-              </p>
-            </div>
+            
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center max-w-4xl mx-auto">
+              Always consult healthcare professionals for medical decisions. This AI provides information only.
+            </p>
           </div>
         </div>
 
-        {/* Cognitive Transparency Panel */}
-        {showThinking && (
-          <div className="w-96 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border-l border-blue-200/30 dark:border-gray-700/50 shadow-2xl">
-            <div className="p-6 border-b border-gray-200/50 dark:border-gray-700/50">
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="w-4 h-4 bg-gradient-to-r from-blue-500 to-green-500 rounded-full animate-pulse"></div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">AI Analysis Process</h3>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Real-time medical analysis in progress</p>
-            </div>
-            
-            <div className="p-6 space-y-4 max-h-[calc(100vh-12rem)] overflow-y-auto">
-              {thinkingSteps.map((step, index) => (
-                <div key={index} className={`flex items-start space-x-4 p-4 rounded-2xl transition-all duration-500 ${
-                  step.completed 
-                    ? 'bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border border-green-200/50 dark:border-green-800/50' 
-                    : 'bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600'
-                }`}>
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
-                    step.completed 
-                      ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg' 
-                      : 'bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400'
-                  }`}>
-                    {step.completed ? <CheckCircle className="h-4 w-4" /> : step.icon}
-                  </div>
-                  <div className="flex-1">
-                    <p className={`text-sm font-medium transition-colors duration-300 ${
-                      step.completed 
-                        ? 'text-gray-900 dark:text-white' 
-                        : 'text-gray-600 dark:text-gray-400'
-                    }`}>
-                      {step.text}
-                    </p>
-                    {step.completed && (
-                      <div className="mt-2 flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-xs text-green-600 dark:text-green-400 font-medium">Completed</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+
       </div>
     </div>
   )
