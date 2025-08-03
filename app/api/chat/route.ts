@@ -11,7 +11,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { message, chatSessionId, type = 'medical', language = 'en' } = await request.json()
+    const { message, chatSessionId, type = 'medical', language = 'en', fileContent } = await request.json()
+    
+    // Combine message with file content if provided
+    let fullMessage = message
+    if (fileContent) {
+      fullMessage = `User uploaded file: ${fileContent.fileName}\n\nFile content:\n${fileContent.text}\n\nUser question: ${message}`
+    }
 
     let chatSession
     if (chatSessionId) {
@@ -51,7 +57,7 @@ export async function POST(request: NextRequest) {
       role: msg.role as 'user' | 'assistant',
       content: msg.content
     }))
-    aiMessages.push({ role: 'user', content: message })
+    aiMessages.push({ role: 'user', content: fullMessage })
 
     // Get AI response
     console.log('Calling AI with messages:', aiMessages.length, 'type:', type, 'language:', language)
