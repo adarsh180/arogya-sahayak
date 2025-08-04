@@ -306,8 +306,11 @@ export default function Chat() {
   }
 
   return (
-    <div className="h-screen bg-white dark:bg-gray-900 flex flex-col">
-      {/* Mobile Header */}
+    <div className="min-h-screen bg-white dark:bg-gray-900">
+      <Navbar />
+      
+      <div className="h-[calc(100vh-4rem)] bg-white dark:bg-gray-900 flex flex-col">
+        {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <button
           onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
@@ -630,6 +633,7 @@ export default function Chat() {
         </div>
 
 
+      </div>
       </div>
     </div>
   )
