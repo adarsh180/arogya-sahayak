@@ -89,52 +89,52 @@ export default function Sidebar({
           damping: 25,
           stiffness: 200
         }}
-        className={`fixed lg:relative inset-y-0 left-0 z-50 w-80 lg:w-64 bg-white border-r border-gray-200 flex flex-col shadow-xl lg:shadow-none ${
+        className={`fixed lg:relative inset-y-0 left-0 z-50 w-80 lg:w-72 bg-neutral-950/80 backdrop-blur-2xl border-r border-neutral-800/40 flex flex-col shadow-2xl ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Chat History</h2>
+        <div className="flex items-center justify-between p-6 border-b border-neutral-800/40">
+          <h2 className="text-lg font-semibold text-neutral-100">Chat History</h2>
           <button
             onClick={onClose}
-            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="lg:hidden p-2.5 hover:bg-neutral-800/60 rounded-2xl transition-all duration-200 text-neutral-300"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* New Chat Button */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-6 border-b border-neutral-800/40">
           <button
             onClick={() => {
               onNewChat()
               onClose()
             }}
-            className="w-full flex items-center space-x-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg"
+            className="w-full flex items-center justify-center space-x-3 px-4 py-4 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white rounded-2xl transition-all duration-200 shadow-medium hover:shadow-large active:scale-95 font-medium"
           >
             <Plus className="h-5 w-5" />
-            <span className="font-medium">New Chat</span>
+            <span>New Chat</span>
           </button>
         </div>
 
         {/* Chat Sessions */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="space-y-2">
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="space-y-3">
             {chatSessions.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No chat history yet</p>
+              <div className="text-center py-12 text-neutral-400">
+                <MessageCircle className="h-10 w-10 mx-auto mb-4 opacity-50" />
+                <p className="text-sm font-medium">No chat history yet</p>
               </div>
             ) : (
               chatSessions.map((session) => (
                 <motion.div
                   key={session.id}
                   layout
-                  className={`group relative p-3 rounded-xl transition-all duration-200 cursor-pointer ${
+                  className={`group relative p-4 rounded-2xl transition-all duration-200 cursor-pointer ${
                     currentSessionId === session.id
-                      ? 'bg-blue-50 border-2 border-blue-200'
-                      : 'hover:bg-gray-50 border-2 border-transparent'
+                      ? 'bg-primary-900/30 border border-primary-700/60 shadow-lg'
+                      : 'hover:bg-neutral-800/60 border border-transparent'
                   }`}
                   onClick={() => {
                     onLoadSession(session.id)
@@ -143,13 +143,13 @@ export default function Sidebar({
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <MessageCircle className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                        <span className="text-sm font-medium text-gray-900 truncate">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <MessageCircle className="h-4 w-4 text-neutral-500 flex-shrink-0" />
+                        <span className="text-sm font-medium text-neutral-100 truncate">
                           {session.title}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-neutral-400 font-medium">
                         {session.messages?.length || 0} messages
                       </p>
                     </div>
@@ -157,12 +157,12 @@ export default function Sidebar({
                     <button
                       onClick={(e) => deleteSession(session.id, e)}
                       disabled={deletingId === session.id}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded-lg transition-all duration-200 ml-2"
+                      className="opacity-0 group-hover:opacity-100 p-2 hover:bg-medical-900/30 rounded-xl transition-all duration-200 ml-2"
                     >
                       {deletingId === session.id ? (
-                        <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-medical-500 border-t-transparent rounded-full animate-spin" />
                       ) : (
-                        <Trash2 className="h-4 w-4 text-red-500" />
+                        <Trash2 className="h-4 w-4 text-medical-500" />
                       )}
                     </button>
                   </div>
@@ -173,15 +173,15 @@ export default function Sidebar({
         </div>
 
         {/* Language Selector */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <Globe className="inline h-4 w-4 mr-1" />
+        <div className="p-6 border-t border-neutral-800/40 bg-neutral-900/50">
+          <label className="block text-sm font-medium text-neutral-300 mb-3">
+            <Globe className="inline h-4 w-4 mr-2" />
             Language
           </label>
           <select
             value={language}
             onChange={(e) => onLanguageChange(e.target.value)}
-            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            className="w-full px-4 py-3 bg-neutral-900/90 backdrop-blur-xl border border-neutral-700/60 rounded-2xl focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500/60 text-sm font-medium transition-all duration-200 text-neutral-100"
           >
             {Object.entries(INDIAN_LANGUAGES).map(([code, name]) => (
               <option key={code} value={code}>{name}</option>

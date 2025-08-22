@@ -106,9 +106,8 @@ export default function Dashboard() {
         {/* Welcome Section */}
         <div className="mb-12 text-center animate-fade-in">
           <div className="relative mb-6">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full blur-xl opacity-20 animate-pulse"></div>
-            <div className="relative p-4 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full w-20 h-20 mx-auto flex items-center justify-center">
-              <Heart className="h-10 w-10 text-blue-600 animate-bounce" />
+            <div className="p-4 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full w-20 h-20 mx-auto flex items-center justify-center">
+              <Heart className="h-10 w-10 text-blue-600" />
             </div>
           </div>
           <h1 className="text-4xl lg:text-5xl font-bold gradient-text mb-4">
@@ -194,17 +193,14 @@ export default function Dashboard() {
                   className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6 hover:shadow-2xl transition-all duration-300 transform hover:scale-105 text-center animate-slide-up"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="relative mb-4">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-2xl blur-lg opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-                    <div className="relative w-16 h-16 mx-auto group-hover:scale-110 transition-transform duration-300">
-                      <Image
-                        src={action.image}
-                        alt={action.name}
-                        width={64}
-                        height={64}
-                        className="w-full h-full object-contain rounded-2xl"
-                      />
-                    </div>
+                  <div className="w-16 h-16 mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <Image
+                      src={action.image}
+                      alt={action.name}
+                      width={64}
+                      height={64}
+                      className="w-full h-full object-contain rounded-2xl"
+                    />
                   </div>
                   <h3 className="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors duration-300">{action.name}</h3>
                 </Link>
@@ -382,12 +378,7 @@ export default function Dashboard() {
         </div>
       </div>
       
-      {/* Floating Background Elements */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full opacity-10 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 rounded-full opacity-10 animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/4 w-60 h-60 bg-green-200 rounded-full opacity-5 animate-pulse" style={{ animationDelay: '2s' }}></div>
-      </div>
+
     </div>
   )
 }

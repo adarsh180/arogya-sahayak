@@ -59,9 +59,35 @@ export async function POST(request: NextRequest) {
     }))
     aiMessages.push({ role: 'user', content: fullMessage })
 
-    // Get AI response
+    // Get AI response with enhanced study context
     console.log('Calling AI with messages:', aiMessages.length, 'type:', type, 'language:', language)
-    const aiResponse = await callAI(aiMessages, type as 'medical' | 'student', language)
+    
+    let aiType: 'medical' | 'student' | 'study-mode' | 'guided-learning' = 'medical'
+    let studyContext = null
+    
+    if (type === 'study') {
+      aiType = 'study-mode'
+      studyContext = {
+        sessionType: 'interactive-learning',
+        teachingStyle: 'step-by-step',
+        difficulty: 'adaptive',
+        includeExercises: true
+      }
+    } else if (type === 'guided-learning') {
+      aiType = 'guided-learning'
+      studyContext = {
+        sessionType: 'socratic-method',
+        teachingStyle: 'discovery-based',
+        difficulty: 'adaptive',
+        includeQuestions: true
+      }
+    } else if (type === 'medical') {
+      aiType = 'medical'
+    } else {
+      aiType = 'student'
+    }
+    
+    const aiResponse = await callAI(aiMessages, aiType, language, 3, studyContext)
     
     if (!aiResponse || aiResponse.includes('technical difficulties') || aiResponse.includes('high demand')) {
       console.error('AI Response failed:', aiResponse)

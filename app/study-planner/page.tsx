@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { 
-  Calendar, Plus, Clock, Target, Brain, CheckCircle, 
+import {
+  Calendar, Plus, Clock, Target, Brain, CheckCircle,
   X, Edit3, Trash2, BookOpen, Zap, Star, AlertCircle
 } from 'lucide-react'
 import Navbar from '@/components/Navbar'
@@ -110,7 +110,7 @@ export default function StudyPlanner() {
       })
 
       if (response.ok) {
-        setStudyPlans(prev => prev.map(plan => 
+        setStudyPlans(prev => prev.map(plan =>
           plan.id === id ? { ...plan, status } : plan
         ))
         toast.success(`Plan marked as ${status}`)
@@ -189,7 +189,7 @@ export default function StudyPlanner() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-medical-50 dark:from-dark-900 dark:via-dark-800 dark:to-dark-900 theme-transition">
       <Navbar />
-      
+
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 animate-fade-in">
           <div className="relative mb-8">
@@ -198,7 +198,7 @@ export default function StudyPlanner() {
               <Calendar className="h-12 w-12 text-primary-600 dark:text-primary-400 animate-bounce-gentle" />
             </div>
           </div>
-          
+
           <h1 className="text-4xl lg:text-6xl font-black mb-6">
             <span className="gradient-text">Study Planner</span>
           </h1>
@@ -231,7 +231,7 @@ export default function StudyPlanner() {
               <Target className="h-6 w-6 mr-2 text-primary-600 dark:text-primary-400" />
               Today's Schedule
             </h2>
-            
+
             {todayPlans.length === 0 ? (
               <div className="text-center py-8">
                 <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -281,7 +281,7 @@ export default function StudyPlanner() {
                 <BookOpen className="h-6 w-6 mr-2 text-medical-600 dark:text-medical-400" />
                 Upcoming Plans
               </h2>
-              
+
               {upcomingPlans.length === 0 ? (
                 <div className="text-center py-12">
                   <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -296,8 +296,8 @@ export default function StudyPlanner() {
               ) : (
                 <div className="space-y-4">
                   {upcomingPlans.map((plan, index) => (
-                    <div 
-                      key={plan.id} 
+                    <div
+                      key={plan.id}
                       className="p-6 bg-gray-50 dark:bg-dark-800 rounded-xl hover:shadow-lg transition-all duration-300 animate-slide-up"
                       style={{ animationDelay: `${index * 100}ms` }}
                     >
@@ -473,11 +473,7 @@ export default function StudyPlanner() {
         )}
       </div>
 
-      {/* Floating Background Elements */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-200 dark:bg-primary-900/30 rounded-full opacity-10 animate-float"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-medical-200 dark:bg-medical-900/30 rounded-full opacity-10 animate-float" style={{ animationDelay: '1s' }}></div>
-      </div>
+
     </div>
   )
 }

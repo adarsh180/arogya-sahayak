@@ -3,10 +3,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { 
+import {
   Bot, User, Send, Paperclip, X, FileText, Image as ImageIcon,
   CheckCircle, AlertTriangle, Stethoscope, Activity, Brain,
-  FileCheck, Zap, Shield, Heart
+  FileCheck, Zap, Shield, Heart, ChevronDown
 } from 'lucide-react'
 import { INDIAN_LANGUAGES } from '@/lib/ai'
 import Navbar from '@/components/Navbar'
@@ -51,8 +51,11 @@ export default function Chat() {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [aiMode, setAiMode] = useState<'medical' | 'study' | 'guided-learning'>('medical')
+  const [showModeSelector, setShowModeSelector] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const modeSelectorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -69,6 +72,20 @@ export default function Chat() {
       fetchChatSessions()
     }
   }, [session])
+
+  // Close mode selector when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (modeSelectorRef.current && !modeSelectorRef.current.contains(event.target as Node)) {
+        setShowModeSelector(false)
+      }
+    }
+
+    if (showModeSelector) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showModeSelector])
 
   const fetchChatSessions = async () => {
     try {
@@ -102,12 +119,12 @@ export default function Chat() {
 
   const deleteChat = async (sessionId: string) => {
     if (!confirm('Delete this conversation?')) return
-    
+
     try {
       const response = await fetch(`/api/chat?sessionId=${sessionId}`, {
         method: 'DELETE'
       })
-      
+
       if (response.ok) {
         setChatSessions(prev => prev.filter(s => s.id !== sessionId))
         if (currentSessionId === sessionId) {
@@ -125,7 +142,7 @@ export default function Chat() {
     const steps: ThinkingStep[] = [
       { icon: <Brain className="h-4 w-4" />, text: 'Identifying key medical terms...', completed: false },
     ]
-    
+
     if (hasFiles) {
       steps.push(
         { icon: <FileCheck className="h-4 w-4" />, text: 'Parsing medical documents...', completed: false },
@@ -133,7 +150,7 @@ export default function Chat() {
         { icon: <Stethoscope className="h-4 w-4" />, text: 'Cross-referencing medical standards...', completed: false }
       )
     }
-    
+
     steps.push(
       { icon: <Heart className="h-4 w-4" />, text: 'Analyzing health indicators...', completed: false },
       { icon: <Zap className="h-4 w-4" />, text: 'Formulating medical insights...', completed: false },
@@ -145,8 +162,8 @@ export default function Chat() {
 
     steps.forEach((_, index) => {
       setTimeout(() => {
-        setThinkingSteps(prev => 
-          prev.map((step, i) => 
+        setThinkingSteps(prev =>
+          prev.map((step, i) =>
             i === index ? { ...step, completed: true } : step
           )
         )
@@ -172,19 +189,19 @@ export default function Chat() {
 
       try {
         toast.loading(`Processing ${file.name}...`, { id: file.name })
-        
+
         // Extract text from file
         const formData = new FormData()
         formData.append('file', file)
-        
+
         const uploadResponse = await fetch('/api/upload', {
           method: 'POST',
           body: formData
         })
-        
+
         if (uploadResponse.ok) {
           const { text, fileName, fileType } = await uploadResponse.json()
-          
+
           const fileId = Date.now().toString() + Math.random().toString(36).substr(2, 9)
           newFiles.push({
             id: fileId,
@@ -194,7 +211,7 @@ export default function Chat() {
             url: URL.createObjectURL(file),
             extractedText: text
           })
-          
+
           toast.success(`${fileName} processed successfully`, { id: file.name })
         } else {
           const errorData = await uploadResponse.json()
@@ -208,7 +225,7 @@ export default function Chat() {
 
     setUploadedFiles(prev => [...prev, ...newFiles])
     setIsUploading(false)
-    
+
     if (newFiles.length > 0) {
       toast.success(`${newFiles.length} file(s) ready for analysis`)
     }
@@ -259,7 +276,7 @@ export default function Chat() {
         body: JSON.stringify({
           message: userMessage,
           chatSessionId: currentSessionId,
-          type: 'medical',
+          type: aiMode,
           language,
           fileContent
         })
@@ -267,13 +284,13 @@ export default function Chat() {
 
       if (response.ok) {
         const data = await response.json()
-        
+
         // Update current session ID if it's a new chat
         if (!currentSessionId) {
           setCurrentSessionId(data.chatSessionId)
           fetchChatSessions() // Refresh sessions list
         }
-        
+
         setMessages(prev => [...prev, {
           id: data.message.id,
           role: 'assistant',
@@ -308,74 +325,139 @@ export default function Chat() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <Navbar />
-      
+
       <div className="h-[calc(100vh-4rem)] bg-white dark:bg-gray-900 flex flex-col">
         {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-        <button
-          onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-          className="flex items-center space-x-3"
-        >
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
-            <Stethoscope className="h-4 w-4 text-white" />
-          </div>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Arogya Sahayak</h1>
-        </button>
-        <button
-          onClick={startNewChat}
-          className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-        </button>
-      </div>
+        <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+          <button
+            onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+            className="flex items-center space-x-3"
+          >
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
+              <Stethoscope className="h-4 w-4 text-white" />
+            </div>
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Arogya Sahayak</h1>
+          </button>
+          <button
+            onClick={startNewChat}
+            className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+        </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Mobile Sidebar Overlay */}
-        {mobileSidebarOpen && (
-          <div className="md:hidden fixed inset-0 z-50 flex">
-            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setMobileSidebarOpen(false)}></div>
-            <div className="relative w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between">
+        <div className="flex flex-1 overflow-hidden">
+          {/* Mobile Sidebar Overlay */}
+          {mobileSidebarOpen && (
+            <div className="md:hidden fixed inset-0 z-50 flex">
+              <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setMobileSidebarOpen(false)}></div>
+              <div className="relative w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={startNewChat}
+                      className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-lg hover:from-blue-700 hover:to-green-700 transition-all duration-300 font-medium text-sm mr-2"
+                    >
+                      <span>+ New Chat</span>
+                    </button>
+                    <button
+                      onClick={() => setMobileSidebarOpen(false)}
+                      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    >
+                      <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4">
+                  <h3 className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-3 uppercase tracking-wide">Recent Conversations</h3>
+                  <div className="space-y-2">
+                    {chatSessions.map((session) => (
+                      <div key={session.id} className={`group relative rounded-lg transition-all duration-300 ${currentSessionId === session.id
+                        ? 'bg-blue-100 dark:bg-blue-900/50 shadow-md'
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                        }`}>
+                        <button
+                          onClick={() => {
+                            loadChatSession(session.id)
+                            setMobileSidebarOpen(false)
+                          }}
+                          className="w-full text-left p-3 pr-8"
+                        >
+                          <div className="flex items-start space-x-2">
+                            <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${currentSessionId === session.id
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+                              }`}>
+                              <Stethoscope className="h-3 w-3" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">
+                                {session.title || 'New conversation'}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {new Date(session.updatedAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        </button>
+                        <button
+                          onClick={() => deleteChat(session.id)}
+                          className="absolute right-1 top-1/2 transform -translate-y-1/2 p-1 opacity-0 group-hover:opacity-100 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-all duration-200"
+                        >
+                          <X className="h-3 w-3 text-red-500" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Desktop Sidebar */}
+          <div className={`hidden md:flex ${sidebarCollapsed ? 'w-0' : 'w-80'} bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-col transition-all duration-300 overflow-hidden`}>
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
+                >
+                  <svg className={`w-5 h-5 text-gray-600 dark:text-gray-300 transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                {!sidebarCollapsed && (
                   <button
                     onClick={startNewChat}
-                    className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-lg hover:from-blue-700 hover:to-green-700 transition-all duration-300 font-medium text-sm mr-2"
+                    className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-lg hover:from-blue-700 hover:to-green-700 transition-all duration-300 font-medium text-sm"
                   >
                     <span>+ New Chat</span>
                   </button>
-                  <button
-                    onClick={() => setMobileSidebarOpen(false)}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                  >
-                    <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                  </button>
-                </div>
+                )}
               </div>
-              
+            </div>
+
+            {!sidebarCollapsed && (
               <div className="flex-1 overflow-y-auto p-4">
                 <h3 className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-3 uppercase tracking-wide">Recent Conversations</h3>
                 <div className="space-y-2">
                   {chatSessions.map((session) => (
-                    <div key={session.id} className={`group relative rounded-lg transition-all duration-300 ${
-                      currentSessionId === session.id
-                        ? 'bg-blue-100 dark:bg-blue-900/50 shadow-md'
-                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                    }`}>
+                    <div key={session.id} className={`group relative rounded-lg transition-all duration-300 ${currentSessionId === session.id
+                      ? 'bg-blue-100 dark:bg-blue-900/50 shadow-md'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                      }`}>
                       <button
-                        onClick={() => {
-                          loadChatSession(session.id)
-                          setMobileSidebarOpen(false)
-                        }}
+                        onClick={() => loadChatSession(session.id)}
                         className="w-full text-left p-3 pr-8"
                       >
                         <div className="flex items-start space-x-2">
-                          <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
-                            currentSessionId === session.id 
-                              ? 'bg-blue-500 text-white' 
-                              : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
-                          }`}>
+                          <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${currentSessionId === session.id
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+                            }`}>
                             <Stethoscope className="h-3 w-3" />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -398,242 +480,317 @@ export default function Chat() {
                   ))}
                 </div>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Desktop Sidebar */}
-        <div className={`hidden md:flex ${sidebarCollapsed ? 'w-0' : 'w-80'} bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-col transition-all duration-300 overflow-hidden`}>
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
-              >
-                <svg className={`w-5 h-5 text-gray-600 dark:text-gray-300 transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              {!sidebarCollapsed && (
-                <button
-                  onClick={startNewChat}
-                  className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-lg hover:from-blue-700 hover:to-green-700 transition-all duration-300 font-medium text-sm"
-                >
-                  <span>+ New Chat</span>
-                </button>
-              )}
-            </div>
-          </div>
-          
-          {!sidebarCollapsed && (
-            <div className="flex-1 overflow-y-auto p-4">
-              <h3 className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-3 uppercase tracking-wide">Recent Conversations</h3>
-              <div className="space-y-2">
-                {chatSessions.map((session) => (
-                  <div key={session.id} className={`group relative rounded-lg transition-all duration-300 ${
-                    currentSessionId === session.id
-                      ? 'bg-blue-100 dark:bg-blue-900/50 shadow-md'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}>
-                    <button
-                      onClick={() => loadChatSession(session.id)}
-                      className="w-full text-left p-3 pr-8"
-                    >
-                      <div className="flex items-start space-x-2">
-                        <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
-                          currentSessionId === session.id 
-                            ? 'bg-blue-500 text-white' 
-                            : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
-                        }`}>
-                          <Stethoscope className="h-3 w-3" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">
-                            {session.title || 'New conversation'}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {new Date(session.updatedAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => deleteChat(session.id)}
-                      className="absolute right-1 top-1/2 transform -translate-y-1/2 p-1 opacity-0 group-hover:opacity-100 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-all duration-200"
-                    >
-                      <X className="h-3 w-3 text-red-500" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col">
-          {/* Desktop Header */}
-          <div className="hidden md:block bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center">
-                  <Stethoscope className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Medical AI Assistant</h1>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">Trusted healthcare insights</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="px-2 py-1 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-full text-xs font-medium flex items-center space-x-1">
-                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                  <span>Online</span>
-                </div>
-                <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="px-2 py-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  {Object.entries(INDIAN_LANGUAGES).slice(0, 5).map(([code, name]) => (
-                    <option key={code} value={code}>{name.split(' ')[0]}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto">
-            {messages.length === 0 && (
-              <div className="h-full flex items-center justify-center p-4">
-                <div className="text-center max-w-md">
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-100 to-green-100 dark:from-blue-900/30 dark:to-green-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Stethoscope className="h-8 w-8 md:h-10 md:w-10 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Arogya Sahayak</h3>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
-                    Your AI medical assistant. Ask about symptoms, health concerns, or upload medical documents.
-                  </p>
-                </div>
-              </div>
             )}
+          </div>
 
-            <div className="px-4 py-4 space-y-4">
-              {messages.map((message, index) => (
-                <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`flex space-x-3 max-w-[85%] sm:max-w-2xl ${message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      message.role === 'user' 
-                        ? 'bg-blue-600' 
-                        : 'bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600'
-                    }`}>
-                      {message.role === 'user' ? (
-                        <User className="h-4 w-4 text-white" />
-                      ) : (
-                        <Stethoscope className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                      )}
+          {/* Main Chat Area */}
+          <div className="flex-1 flex flex-col">
+            {/* Desktop Header */}
+            <div className="hidden md:block bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center">
+                    <Stethoscope className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Medical AI Assistant</h1>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Trusted healthcare insights</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="px-2 py-1 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-full text-xs font-medium flex items-center space-x-1">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                    <span>Online</span>
+                  </div>
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="px-2 py-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    {Object.entries(INDIAN_LANGUAGES).slice(0, 5).map(([code, name]) => (
+                      <option key={code} value={code}>{name.split(' ')[0]}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto">
+              {messages.length === 0 && (
+                <div className="h-full flex items-center justify-center p-4">
+                  <div className="text-center max-w-md">
+                    <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-100 to-green-100 dark:from-blue-900/30 dark:to-green-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <Stethoscope className="h-8 w-8 md:h-10 md:w-10 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <div className={`rounded-2xl px-4 py-3 max-w-full ${
-                      message.role === 'user'
+                    <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Arogya Sahayak</h3>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base mb-4">
+                      Your AI medical assistant with multiple learning modes
+                    </p>
+                    <div className="text-left space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center space-x-2">
+                        <Stethoscope className="h-4 w-4 text-blue-500" />
+                        <span><strong>Medical Mode:</strong> General health queries & symptom analysis</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Brain className="h-4 w-4 text-purple-500" />
+                        <span><strong>Study Mode:</strong> Interactive step-by-step learning</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Activity className="h-4 w-4 text-green-500" />
+                        <span><strong>Guided Learning:</strong> Discovery through questions</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="px-4 py-4 space-y-4">
+                {messages.map((message, index) => (
+                  <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`flex space-x-3 max-w-[85%] sm:max-w-2xl ${message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${message.role === 'user'
+                        ? 'bg-blue-600'
+                        : 'bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                        }`}>
+                        {message.role === 'user' ? (
+                          <User className="h-4 w-4 text-white" />
+                        ) : (
+                          <Stethoscope className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                        )}
+                      </div>
+                      <div className={`rounded-2xl px-4 py-3 max-w-full ${message.role === 'user'
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700'
-                    }`}>
-                      {message.attachments && message.attachments.length > 0 && (
-                        <div className="mb-3 space-y-2">
-                          {message.attachments.map((file) => (
-                            <div key={file.id} className={`flex items-center space-x-2 p-2 rounded-lg text-xs ${
-                              message.role === 'user' ? 'bg-white/20' : 'bg-gray-200 dark:bg-gray-700'
-                            }`}>
-                              {file.type.startsWith('image/') ? (
-                                <ImageIcon className="h-3 w-3" />
-                              ) : (
-                                <FileText className="h-3 w-3" />
-                              )}
-                              <span className="truncate">{file.name}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <MessageRenderer content={message.content} role={message.role} />
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="flex space-x-3 max-w-2xl">
-                    <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center">
-                      <Stethoscope className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                    </div>
-                    <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-3 border border-gray-200 dark:border-gray-700">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                        }`}>
+                        {message.attachments && message.attachments.length > 0 && (
+                          <div className="mb-3 space-y-2">
+                            {message.attachments.map((file) => (
+                              <div key={file.id} className={`flex items-center space-x-2 p-2 rounded-lg text-xs ${message.role === 'user' ? 'bg-white/20' : 'bg-gray-200 dark:bg-gray-700'
+                                }`}>
+                                {file.type.startsWith('image/') ? (
+                                  <ImageIcon className="h-3 w-3" />
+                                ) : (
+                                  <FileText className="h-3 w-3" />
+                                )}
+                                <span className="truncate">{file.name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <MessageRenderer content={message.content} role={message.role} />
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                ))}
+
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="flex space-x-3 max-w-2xl">
+                      <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center">
+                        <Stethoscope className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                      </div>
+                      <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-3 border border-gray-200 dark:border-gray-700">
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div ref={messagesEndRef} />
             </div>
 
-            <div ref={messagesEndRef} />
-          </div>
+            {/* Input Area */}
+            <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+              <div className="max-w-4xl mx-auto">
+                {/* Input Form with AI Mode Selector */}
+                <form onSubmit={handleSubmit}>
+                  <div className="flex items-end space-x-3">
+                    {/* AI Mode Selector - Left Side */}
+                    <div className="relative" ref={modeSelectorRef}>
+                      <button
+                        type="button"
+                        onClick={() => setShowModeSelector(!showModeSelector)}
+                        className="flex items-center justify-center w-12 h-12 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors border border-gray-200 dark:border-gray-600"
+                        title={`Current mode: ${aiMode === 'medical' ? 'Medical Assistant' : aiMode === 'study' ? 'Study Mode' : 'Guided Learning'}`}
+                      >
+                        {aiMode === 'medical' && <Stethoscope className="h-5 w-5 text-blue-500" />}
+                        {aiMode === 'study' && <Brain className="h-5 w-5 text-purple-500" />}
+                        {aiMode === 'guided-learning' && <Activity className="h-5 w-5 text-green-500" />}
+                      </button>
 
-          {/* Input Area */}
-          <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-            <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-              <div className="flex space-x-3">
-                <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask about symptoms, health concerns..."
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    disabled={isLoading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="absolute right-12 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-                    disabled={isLoading || isUploading}
-                  >
-                    {isUploading ? (
-                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
-                      <Paperclip className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                    )}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isLoading || !input.trim()}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <Send className="h-4 w-4" />
-                  </button>
+                      {/* Dropdown Menu */}
+                      {showModeSelector && (
+                        <div className="absolute bottom-full left-0 mb-2 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg z-50">
+                          <div className="p-2">
+                            <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-3 py-2 uppercase tracking-wide">
+                              Select AI Mode
+                            </div>
+
+                            {/* Medical Mode */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAiMode('medical')
+                                setShowModeSelector(false)
+                              }}
+                              className={`w-full flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left ${aiMode === 'medical' ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700' : ''
+                                }`}
+                            >
+                              <Stethoscope className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">Medical Assistant</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">General medical queries & health advice</div>
+                              </div>
+                              {aiMode === 'medical' && <div className="w-2 h-2 bg-blue-500 rounded-full mt-1 flex-shrink-0"></div>}
+                            </button>
+
+                            {/* Study Mode */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAiMode('study')
+                                setShowModeSelector(false)
+                                // Add welcome message for study mode
+                                if (messages.length === 0) {
+                                  setMessages([{
+                                    id: Date.now().toString(),
+                                    role: 'assistant',
+                                    content: '🎓 **Study Mode Activated!** \n\nI\'m now your dedicated medical tutor, ready to help you learn step-by-step. I can:\n\n• Break down complex medical concepts\n• Provide interactive learning sessions\n• Create custom practice questions\n• Explain topics with analogies and examples\n• Guide you through problem-solving\n\nWhat medical topic would you like to study today? Just tell me the subject (like "Cardiovascular System" or "Pharmacology") and I\'ll create a personalized learning experience for you!',
+                                    createdAt: new Date().toISOString()
+                                  }])
+                                }
+                              }}
+                              className={`w-full flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left ${aiMode === 'study' ? 'bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700' : ''
+                                }`}
+                            >
+                              <Brain className="h-4 w-4 text-purple-500 mt-0.5 flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">Study Mode</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Interactive learning & step-by-step teaching</div>
+                              </div>
+                              {aiMode === 'study' && <div className="w-2 h-2 bg-purple-500 rounded-full mt-1 flex-shrink-0"></div>}
+                            </button>
+
+                            {/* Guided Learning Mode */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAiMode('guided-learning')
+                                setShowModeSelector(false)
+                                // Add welcome message for guided learning
+                                if (messages.length === 0) {
+                                  setMessages([{
+                                    id: Date.now().toString(),
+                                    role: 'assistant',
+                                    content: '🎯 **Guided Learning Mode Activated!** \n\nI\'m your personal medical learning guide, specializing in:\n\n• **Socratic Method**: Learning through guided questions\n• **Problem-Based Learning**: Real clinical scenarios\n• **Step-by-Step Breakdown**: Complex topics made simple\n• **Interactive Exercises**: Immediate practice and feedback\n• **Concept Mapping**: Visual learning connections\n\nI\'ll help you discover knowledge through guided questioning rather than just giving answers. What medical concept would you like to explore together? I\'ll guide you to understand it deeply through interactive discovery!',
+                                    createdAt: new Date().toISOString()
+                                  }])
+                                }
+                              }}
+                              className={`w-full flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left ${aiMode === 'guided-learning' ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700' : ''
+                                }`}
+                            >
+                              <Activity className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">Guided Learning</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Socratic method & discovery learning</div>
+                              </div>
+                              {aiMode === 'guided-learning' && <div className="w-2 h-2 bg-green-500 rounded-full mt-1 flex-shrink-0"></div>}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Input Field */}
+                    <div className="flex-1 relative">
+                      <textarea
+                        value={input}
+                        onChange={(e) => {
+                          setInput(e.target.value)
+                          // Auto-resize textarea
+                          e.target.style.height = 'auto'
+                          e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault()
+                            handleSubmit(e)
+                          }
+                        }}
+                        placeholder="Ask about symptoms, health concerns... (Shift+Enter for new line)"
+                        className="w-full px-4 py-3 pr-20 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto min-h-[48px] max-h-[120px]"
+                        disabled={isLoading}
+                        rows={1}
+                      />
+                      <div className="absolute right-2 bottom-2 flex items-center space-x-1">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                          disabled={isLoading || isUploading}
+                        >
+                          {isUploading ? (
+                            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <Paperclip className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                          )}
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={isLoading || !input.trim()}
+                          className="p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {isLoading ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+
+                {/* Mode Indicator Below Input */}
+                <div className="flex items-center justify-center mt-2">
+                  <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                    <div className={`w-1.5 h-1.5 rounded-full ${aiMode === 'medical' ? 'bg-blue-500' :
+                      aiMode === 'study' ? 'bg-purple-500' : 'bg-green-500'
+                      }`}></div>
+                    <span>
+                      {aiMode === 'medical' ? 'Medical Assistant' :
+                        aiMode === 'study' ? 'Study Mode' : 'Guided Learning'} Active
+                    </span>
+                  </div>
                 </div>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                  Always consult healthcare professionals for medical decisions. This AI provides information only.
+                </p>
               </div>
-            </form>
-            
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-            
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center max-w-4xl mx-auto">
-              Always consult healthcare professionals for medical decisions. This AI provides information only.
-            </p>
+            </div>
           </div>
+
+
         </div>
-
-
-      </div>
       </div>
     </div>
   )

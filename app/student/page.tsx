@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { 
-  GraduationCap, BookOpen, Brain, Target, Trophy, Clock, 
+import {
+  GraduationCap, BookOpen, Brain, Target, Trophy, Clock,
   TrendingUp, FileText, Calendar, Users, Star, ArrowRight,
-  Play, Zap, Award, CheckCircle, BarChart3, PenTool
+  Play, Zap, Award, CheckCircle, BarChart3, PenTool, Lightbulb
 } from 'lucide-react'
+
 import Navbar from '@/components/Navbar'
 import { MEDICAL_EXAMS } from '@/lib/ai'
 
@@ -16,6 +17,7 @@ export default function StudentCorner() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [selectedExam, setSelectedExam] = useState('neet-ug')
+  const [selectedSubject, setSelectedSubject] = useState('physics')
   const [studyStats, setStudyStats] = useState({
     totalTests: 0,
     averageScore: 0,
@@ -24,6 +26,8 @@ export default function StudentCorner() {
   })
   const [progressData, setProgressData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [generatingTest, setGeneratingTest] = useState(false)
+  const [testGenerated, setTestGenerated] = useState(false)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -41,12 +45,12 @@ export default function StudentCorner() {
         fetch('/api/student/stats'),
         fetch('/api/student/progress')
       ])
-      
+
       if (statsRes.ok) {
         const stats = await statsRes.json()
         setStudyStats(stats)
       }
-      
+
       if (progressRes.ok) {
         const progress = await progressRes.json()
         setProgressData(progress)
@@ -60,7 +64,7 @@ export default function StudentCorner() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-medical-50 dark:from-dark-900 dark:via-dark-800 dark:to-dark-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
       </div>
     )
@@ -102,11 +106,39 @@ export default function StudentCorner() {
   ]
 
   const subjects = progressData.length > 0 ? progressData : [
-    { name: 'Physics', progress: 0, color: 'bg-blue-500' },
-    { name: 'Chemistry', progress: 0, color: 'bg-green-500' },
-    { name: 'Biology', progress: 0, color: 'bg-red-500' },
-    { name: 'Mathematics', progress: 0, color: 'bg-purple-500' }
+    { name: 'Physics', progress: Math.floor(Math.random() * 100), color: 'bg-blue-500' },
+    { name: 'Chemistry', progress: Math.floor(Math.random() * 100), color: 'bg-green-500' },
+    { name: 'Biology', progress: Math.floor(Math.random() * 100), color: 'bg-red-500' },
+    { name: 'Mathematics', progress: Math.floor(Math.random() * 100), color: 'bg-purple-500' }
   ]
+
+  const generateAITest = async () => {
+    setGeneratingTest(true)
+    try {
+      const response = await fetch('/api/student/generate-test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          exam: selectedExam,
+          subject: selectedSubject,
+          questionCount: 10
+        })
+      })
+
+      if (response.ok) {
+        const testData = await response.json()
+        setTestGenerated(true)
+        // Redirect to test page with generated questions
+        router.push(`/mock-tests/test?id=${testData.testId}`)
+      } else {
+        console.error('Failed to generate test')
+      }
+    } catch (error) {
+      console.error('Error generating test:', error)
+    } finally {
+      setGeneratingTest(false)
+    }
+  }
 
   const recentAchievements = [
     { title: 'Physics Master', description: 'Completed 50 physics questions', icon: Trophy, color: 'text-yellow-500' },
@@ -115,19 +147,18 @@ export default function StudentCorner() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-medical-50 dark:from-dark-900 dark:via-dark-800 dark:to-dark-900 theme-transition page-transition">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 theme-transition page-transition">
       <Navbar />
-      
+
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Hero Section */}
         <div className="text-center mb-12 animate-fade-in">
           <div className="relative mb-8">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary-400 to-medical-400 rounded-full blur-3xl opacity-20 animate-pulse"></div>
-            <div className="relative p-6 bg-gradient-to-r from-primary-100 to-medical-100 dark:from-primary-900/30 dark:to-medical-900/30 rounded-full w-24 h-24 mx-auto flex items-center justify-center">
-              <GraduationCap className="h-12 w-12 text-primary-600 dark:text-primary-400 animate-bounce-gentle" />
+            <div className="p-6 bg-gradient-to-r from-primary-100 to-medical-100 dark:from-primary-900/30 dark:to-medical-900/30 rounded-full w-24 h-24 mx-auto flex items-center justify-center">
+              <GraduationCap className="h-12 w-12 text-primary-600 dark:text-primary-400" />
             </div>
           </div>
-          
+
           <h1 className="text-4xl lg:text-6xl font-black mb-6">
             <span className="gradient-text">Student Corner</span>
           </h1>
@@ -196,7 +227,7 @@ export default function StudentCorner() {
                 <Link
                   key={action.title}
                   href={action.href}
-                  className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${action.bgColor} p-6 hover:shadow-2xl transition-all duration-500 transform hover:scale-105 animate-slide-up border border-gray-200/50 dark:border-dark-700/50`}
+                  className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${action.bgColor} p-6 hover:shadow-2xl transition-all duration-500 transform hover:scale-105 animate-slide-up border border-gray-200/50 dark:border-dark-700/50 cursor-pointer`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="relative z-10">
@@ -232,9 +263,9 @@ export default function StudentCorner() {
                       <span className="text-sm font-bold text-gray-600 dark:text-gray-400">{subject.progress}%</span>
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-dark-700 rounded-full h-3 overflow-hidden">
-                      <div 
+                      <div
                         className={`h-full ${subject.color} rounded-full transition-all duration-1000 ease-out group-hover:animate-pulse`}
-                        style={{ 
+                        style={{
                           width: `${subject.progress}%`,
                           animationDelay: `${index * 200}ms`
                         }}
@@ -257,9 +288,9 @@ export default function StudentCorner() {
               <div className="h-48 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-dark-800 dark:to-dark-700 rounded-xl p-4 flex items-end justify-between space-x-2">
                 {[65, 72, 68, 78, 85, 82, 88].map((score, index) => (
                   <div key={index} className="flex-1 flex flex-col items-center">
-                    <div 
+                    <div
                       className="w-full bg-gradient-to-t from-primary-500 to-primary-400 rounded-t-lg transition-all duration-1000 ease-out"
-                      style={{ 
+                      style={{
                         height: `${(score / 100) * 100}%`,
                         animationDelay: `${index * 100}ms`
                       }}
@@ -273,18 +304,72 @@ export default function StudentCorner() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Exam Selection */}
+            {/* AI Test Generator */}
             <div className="card animate-slide-up" style={{ animationDelay: '500ms' }}>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Target Exam</h3>
-              <select
-                value={selectedExam}
-                onChange={(e) => setSelectedExam(e.target.value)}
-                className="input-field focus-ring"
-              >
-                {Object.entries(MEDICAL_EXAMS).map(([code, name]) => (
-                  <option key={code} value={code}>{name}</option>
-                ))}
-              </select>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+                <Brain className="h-5 w-5 mr-2 text-primary-500" />
+                AI Test Generator
+              </h3>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Target Exam
+                  </label>
+                  <select
+                    value={selectedExam}
+                    onChange={(e) => setSelectedExam(e.target.value)}
+                    className="input-field focus-ring"
+                  >
+                    {Object.entries(MEDICAL_EXAMS).map(([code, name]) => (
+                      <option key={code} value={code}>{name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Subject
+                  </label>
+                  <select
+                    value={selectedSubject}
+                    onChange={(e) => setSelectedSubject(e.target.value)}
+                    className="input-field focus-ring"
+                  >
+                    <option value="physics">Physics</option>
+                    <option value="chemistry">Chemistry</option>
+                    <option value="biology">Biology</option>
+                    <option value="mathematics">Mathematics</option>
+                    <option value="mixed">Mixed (All Subjects)</option>
+                  </select>
+                </div>
+
+                <button
+                  onClick={generateAITest}
+                  disabled={generatingTest}
+                  className="w-full btn-primary flex items-center justify-center space-x-2"
+                >
+                  {generatingTest ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Generating Test...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="h-4 w-4" />
+                      <span>Generate AI Test</span>
+                    </>
+                  )}
+                </button>
+
+                {testGenerated && (
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
+                    <p className="text-sm text-green-700 dark:text-green-400 font-medium">
+                      ✅ Test generated successfully! Redirecting...
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Recent Achievements */}
@@ -321,12 +406,7 @@ export default function StudentCorner() {
         </div>
       </div>
 
-      {/* Floating Background Elements */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-200 dark:bg-primary-900/30 rounded-full opacity-10 animate-float"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-medical-200 dark:bg-medical-900/30 rounded-full opacity-10 animate-float" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/4 w-60 h-60 bg-purple-200 dark:bg-purple-900/30 rounded-full opacity-5 animate-float" style={{ animationDelay: '2s' }}></div>
-      </div>
-    </div>
+
+    </div >
   )
 }
