@@ -1,6 +1,6 @@
 'use client'
 
-import { Phone, MapPin, Clock, Heart, Ambulance, Shield, Plus, Star } from 'lucide-react'
+import { Phone, MapPin, Clock, Heart, Truck, Shield, Plus, Star } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 
 export default function Emergency() {
@@ -21,7 +21,7 @@ export default function Emergency() {
       description: 'Emergency medical services',
       type: 'medical',
       available: '24/7',
-      icon: Ambulance
+      icon: Truck
     },
     {
       id: 3,
@@ -125,7 +125,7 @@ export default function Emergency() {
               href="tel:108"
               className="flex items-center justify-center space-x-3 bg-red-700 hover:bg-red-800 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95"
             >
-              <Ambulance className="h-5 w-5" />
+              <Truck className="h-5 w-5" />
               <span>Call 108 - Ambulance</span>
             </a>
           </div>
