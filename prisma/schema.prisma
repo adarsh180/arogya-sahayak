@@ -93,6 +93,7 @@ model Medication {
   reminders   String[] // times like ["08:00", "20:00"]
   notes       String?
   isActive    Boolean  @default(true)
+  aiAnalysis  String?  // JSON string for AI analysis
   createdAt   DateTime @default(now())
   
   user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -108,6 +109,15 @@ model HealthRecord {
   recordedAt  DateTime @default(now())
   
   user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model HealthData {
+  id          String   @id @default(cuid())
+  userEmail   String
+  type        String   // bmi, blood_pressure, glucose, heart_rate
+  value       String   // JSON string for values
+  analysis    String   // JSON string for AI analysis
+  createdAt   DateTime @default(now())
 }
 
 model Appointment {

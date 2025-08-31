@@ -42,7 +42,7 @@ export default function Dashboard() {
 
   const fetchHealthStats = async () => {
     try {
-      const response = await fetch('/api/health-records')
+      const response = await fetch('/api/health-data')
       if (response.ok) {
         const records = await response.json()
         setRecentRecords(records.slice(0, 5))
@@ -53,12 +53,12 @@ export default function Dashboard() {
         const glucoseRecord = records.find((r: any) => r.type === 'glucose')
         
         setHealthStats({
-          bmi: bmiRecord ? JSON.parse(bmiRecord.value).bmi : 0,
-          lastCheckup: records.length > 0 ? new Date(records[0].recordedAt).toLocaleDateString() : null,
+          bmi: bmiRecord ? parseFloat(bmiRecord.value.bmi) : 0,
+          lastCheckup: records.length > 0 ? new Date(records[0].createdAt).toLocaleDateString() : null,
           medications: 0,
           appointments: 0,
-          lastBP: bpRecord ? `${JSON.parse(bpRecord.value).systolic}/${JSON.parse(bpRecord.value).diastolic}` : null,
-          lastGlucose: glucoseRecord ? `${glucoseRecord.value} mg/dL` : null
+          lastBP: bpRecord ? `${bpRecord.value.systolic}/${bpRecord.value.diastolic}` : null,
+          lastGlucose: glucoseRecord ? `${glucoseRecord.value.glucose} mg/dL` : null
         })
       }
     } catch (error) {
@@ -256,48 +256,55 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   recentRecords.map((record) => {
-                    let displayValue = record.value
+                    let displayValue = ''
                     let alertColor = 'bg-blue-500'
                     let isAbnormal = false
                     
-                    try {
-                      const parsed = JSON.parse(record.value)
-                      if (record.type === 'bmi') {
-                        displayValue = parsed.bmi
-                        const bmi = parseFloat(parsed.bmi)
-                        if (bmi < 18.5 || bmi > 25) {
-                          alertColor = bmi > 30 ? 'bg-red-500' : 'bg-yellow-500'
-                          isAbnormal = true
-                        }
-                      } else if (record.type === 'blood_pressure') {
-                        displayValue = `${parsed.systolic}/${parsed.diastolic}`
-                        if (parsed.systolic > 140 || parsed.diastolic > 90) {
-                          alertColor = 'bg-red-500'
-                          isAbnormal = true
-                        } else if (parsed.systolic > 120 || parsed.diastolic > 80) {
-                          alertColor = 'bg-yellow-500'
-                          isAbnormal = true
-                        }
-                      } else if (record.type === 'glucose') {
-                        displayValue = record.value
-                        const glucose = parseInt(record.value)
-                        if (glucose > 126) {
-                          alertColor = 'bg-red-500'
-                          isAbnormal = true
-                        } else if (glucose > 100) {
-                          alertColor = 'bg-yellow-500'
-                          isAbnormal = true
-                        }
-                      } else if (record.type === 'heart_rate') {
-                        displayValue = record.value
-                        const hr = parseInt(record.value)
-                        if (hr < 60 || hr > 100) {
-                          alertColor = 'bg-yellow-500'
-                          isAbnormal = true
-                        }
+                    // Get display value and status from actual data
+                    if (record.type === 'bmi') {
+                      displayValue = record.value.bmi
+                      const bmi = parseFloat(record.value.bmi)
+                      if (bmi < 18.5 || bmi > 25) {
+                        alertColor = bmi > 30 ? 'bg-red-500' : 'bg-yellow-500'
+                        isAbnormal = true
                       }
-                    } catch (e) {
-                      displayValue = record.value
+                    } else if (record.type === 'blood_pressure') {
+                      displayValue = `${record.value.systolic}/${record.value.diastolic}`
+                      if (record.value.systolic > 140 || record.value.diastolic > 90) {
+                        alertColor = 'bg-red-500'
+                        isAbnormal = true
+                      } else if (record.value.systolic > 120 || record.value.diastolic > 80) {
+                        alertColor = 'bg-yellow-500'
+                        isAbnormal = true
+                      }
+                    } else if (record.type === 'glucose') {
+                      displayValue = `${record.value.glucose} mg/dL`
+                      const glucose = parseInt(record.value.glucose)
+                      if (glucose > 126) {
+                        alertColor = 'bg-red-500'
+                        isAbnormal = true
+                      } else if (glucose > 100) {
+                        alertColor = 'bg-yellow-500'
+                        isAbnormal = true
+                      }
+                    } else if (record.type === 'heart_rate') {
+                      displayValue = `${record.value.heart_rate} BPM`
+                      const hr = parseInt(record.value.heart_rate)
+                      if (hr < 60 || hr > 100) {
+                        alertColor = 'bg-yellow-500'
+                        isAbnormal = true
+                      }
+                    }
+                    
+                    // Use AI analysis status for color
+                    if (record.analysis.status === 'danger') {
+                      alertColor = 'bg-red-500'
+                      isAbnormal = true
+                    } else if (record.analysis.status === 'warning') {
+                      alertColor = 'bg-yellow-500'
+                      isAbnormal = true
+                    } else {
+                      alertColor = 'bg-green-500'
                     }
                     
                     return (
@@ -305,16 +312,18 @@ export default function Dashboard() {
                         <div className={`w-2 h-2 ${alertColor} rounded-full ${isAbnormal ? 'animate-pulse' : ''}`}></div>
                         <div className="flex-1">
                           <p className="text-sm font-medium text-gray-900 capitalize">
-                            {record.type.replace('_', ' ')}: {displayValue}{record.unit && ` ${record.unit}`}
+                            {record.type.replace('_', ' ')}: {displayValue}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {new Date(record.recordedAt).toLocaleDateString()}
+                            {new Date(record.createdAt).toLocaleDateString()}
                           </p>
-                          {record.notes && isAbnormal && (
-                            <p className="text-xs text-red-600 mt-1 font-medium">
-                              ⚠️ {record.notes.substring(0, 50)}...
-                            </p>
-                          )}
+                          <p className={`text-xs mt-1 font-medium capitalize ${
+                            record.analysis.status === 'danger' ? 'text-red-600' :
+                            record.analysis.status === 'warning' ? 'text-yellow-600' : 'text-green-600'
+                          }`}>
+                            {record.analysis.status === 'danger' ? '⚠️' : 
+                             record.analysis.status === 'warning' ? '⚡' : '✅'} {record.analysis.status}
+                          </p>
                         </div>
                       </div>
                     )
@@ -324,28 +333,7 @@ export default function Dashboard() {
             </div>
 
             {/* Health Alerts */}
-            {recentRecords.some(record => {
-              try {
-                if (record.type === 'glucose') {
-                  const glucose = parseInt(record.value)
-                  return glucose > 100 || glucose < 70
-                }
-                if (record.type === 'blood_pressure') {
-                  const parsed = JSON.parse(record.value)
-                  return parsed.systolic > 120 || parsed.diastolic > 80
-                }
-                if (record.type === 'bmi') {
-                  const parsed = JSON.parse(record.value)
-                  const bmi = parseFloat(parsed.bmi)
-                  return bmi < 18.5 || bmi > 25
-                }
-                if (record.type === 'heart_rate') {
-                  const hr = parseInt(record.value)
-                  return hr < 60 || hr > 100
-                }
-              } catch (e) {}
-              return false
-            }) && (
+            {recentRecords.some(record => record.analysis.status === 'danger' || record.analysis.status === 'warning') && (
               <div className="mt-8">
                 <h3 className="text-xl font-bold text-red-700 mb-4 flex items-center">
                   <AlertCircle className="h-6 w-6 mr-2" />

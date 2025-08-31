@@ -99,13 +99,25 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-      // Extract JSON from AI response
-      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) {
+      // Clean and extract JSON from AI response
+      let jsonStr = aiResponse.trim()
+      
+      // Find JSON object boundaries
+      const startIndex = jsonStr.indexOf('{')
+      const lastIndex = jsonStr.lastIndexOf('}')
+      
+      if (startIndex === -1 || lastIndex === -1) {
         throw new Error('No valid JSON found in response')
       }
-
-      const healthTip = JSON.parse(jsonMatch[0])
+      
+      jsonStr = jsonStr.substring(startIndex, lastIndex + 1)
+      
+      const healthTip = JSON.parse(jsonStr)
+      
+      // Validate required fields
+      if (!healthTip.tip || !healthTip.explanation || !healthTip.steps) {
+        throw new Error('Invalid health tip structure')
+      }
       
       // Cache the tip for today
       if (!global.healthTipsCache) global.healthTipsCache = {}
