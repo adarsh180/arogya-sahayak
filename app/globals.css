@@ -1472,8 +1472,7 @@ html:not(.dark) [class~="placeholder-zinc-500"]::placeholder { color: #71877f !i
 }
 
 /* Conversation workspace v2 */
-.as-chat-shell { grid-template-columns: 268px 1fr; }
-.as-chat-shell { height: 100dvh; }
+.as-chat-shell { height: 100dvh; grid-template-columns: 268px 1fr; }
 .as-chat-history { padding: 1rem .8rem .8rem; background: var(--as-strong); }
 .as-history-brand { display: flex; align-items: center; gap: .7rem; min-height: 54px; margin-bottom: .5rem; padding: .35rem .45rem .75rem; border-bottom: 1px solid rgba(255,255,255,.09); }
 .as-history-brand img { width: 31px; height: 31px; object-fit: contain; }
@@ -1487,7 +1486,7 @@ html:not(.dark) [class~="placeholder-zinc-500"]::placeholder { color: #71877f !i
 .as-history-main strong { font-size: .64rem; }
 
 .as-chat-workspace { height: calc(100dvh - 72px); grid-template-rows: 70px auto 1fr auto; }
-.as-message-scroll { overscroll-behavior: contain; scroll-behavior: smooth; }
+.as-message-scroll { display: flex; flex-direction: column; overscroll-behavior: contain; scroll-behavior: smooth; }
 .as-chat-header { min-width: 0; padding: 0 1rem; }
 .as-chat-title { min-width: 0; display: flex; align-items: center; gap: .65rem; }
 .as-chat-title > img { width: 27px; height: 27px; object-fit: contain; }
@@ -1520,7 +1519,7 @@ html:not(.dark) [class~="placeholder-zinc-500"]::placeholder { color: #71877f !i
 .as-prompt-list button { min-height: 92px; border-radius: 16px; padding: .85rem; font-size: .64rem; background: color-mix(in srgb, var(--as-paper) 96%, transparent); box-shadow: 0 8px 25px rgba(20,52,45,.025); }
 .as-prompt-list button:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(20,52,45,.075); }
 
-.as-message-list { width: min(900px, calc(100% - 2rem)); min-height: 100%; display: flex; flex-direction: column; justify-content: flex-end; margin: auto; padding: 2rem 0 2.5rem; }
+.as-message-list { width: min(900px, calc(100% - 2rem)); min-height: 0; flex: 1 0 auto; display: flex; flex-direction: column; justify-content: flex-end; margin: auto; padding: 2rem 0 2.5rem; }
 .as-message { grid-template-columns: 36px minmax(0, 1fr); gap: .8rem; margin-bottom: 1.8rem; }
 .as-message-avatar { width: 35px; height: 35px; border-radius: 12px; }
 .as-message-avatar img { width: 21px; height: 21px; object-fit: contain; }
