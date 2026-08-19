@@ -56,3 +56,6 @@ logs
 
 # API Keys
 key.txt
+
+# Local Netlify folder
+.netlify
