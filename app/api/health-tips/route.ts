@@ -165,5 +165,6 @@ export async function GET(request: NextRequest) {
 
 // Declare global cache type
 declare global {
+  // eslint-disable-next-line no-var
   var healthTipsCache: { [key: string]: any } | undefined
 }

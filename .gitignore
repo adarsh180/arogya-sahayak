@@ -30,7 +30,7 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
-.env.example
+!.env.example
 
 # Vercel
 .vercel
@@ -40,7 +40,8 @@ yarn-error.log*
 next-env.d.ts
 
 # Prisma
-/prisma/migrations/
+!/prisma/migrations/
+!/prisma/migrations/**
 
 # IDE
 .vscode/

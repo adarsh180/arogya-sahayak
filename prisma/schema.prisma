@@ -48,6 +48,7 @@ model User {
   preferredLanguage String? @default("en")
   userType      String    @default("patient") // patient, student
   theme         String    @default("light") // light, dark
+  onboardingCompleted Boolean @default(false)
   
   // Physical Details
   height        Float?    // in cm
@@ -80,6 +81,19 @@ model User {
   emergencyContacts EmergencyContact[]
   vaccinations  Vaccination[]
   familyMembers FamilyMember[]
+  medicalFavorites MedicalFavorite[]
+}
+
+model MedicalFavorite {
+  id        String   @id @default(cuid())
+  userId    String
+  termId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, termId])
+  @@index([userId])
 }
 
 model Medication {

@@ -4,8 +4,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -13,13 +13,12 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    await prisma.medication.update({
-      where: { 
-        id: params.id,
-        userId: session.user.id
-      },
+    const { id } = await params
+    const updated = await prisma.medication.updateMany({
+      where: { id, userId: session.user.id },
       data: { isActive: false }
     })
+    if (!updated.count) return NextResponse.json({ error: 'Medication not found' }, { status: 404 })
 
     return NextResponse.json({ success: true })
   } catch (error) {

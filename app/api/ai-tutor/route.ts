@@ -1,8 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { callAI } from '@/lib/ai'
+import { getServerSession } from 'next-auth'
+import { z } from 'zod'
+import { authOptions } from '@/lib/auth'
+import { checkRateLimit, getRequestKey, parseJson, rateLimitResponse } from '@/lib/api-security'
+
+const tutorSchema = z.object({
+  messages: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().min(1).max(4_000) })).min(1).max(30),
+  tutorMode: z.enum(['socratic', 'adaptive', 'interactive', 'problem-solving', 'concept-mapping']).default('adaptive'),
+  studentLevel: z.string().max(80).default('adaptive'),
+  learningStyle: z.enum(['visual', 'auditory', 'kinesthetic', 'mixed']).default('mixed'),
+  subject: z.string().trim().min(1).max(120),
+  topic: z.string().trim().min(1).max(180),
+  sessionContext: z.record(z.unknown()).optional()
+})
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const rate = checkRateLimit(`tutor:${getRequestKey(request, session.user.id)}`, 10)
+    if (!rate.allowed) return rateLimitResponse(rate.retryAfter)
+    const parsed = await parseJson(request, tutorSchema)
+    if (!parsed.ok) return parsed.response
     const { 
       messages, 
       tutorMode, 
@@ -11,7 +31,9 @@ export async function POST(request: NextRequest) {
       subject, 
       topic,
       sessionContext 
-    } = await request.json()
+    } = parsed.data
+    const safeMode = tutorMode || 'adaptive'
+    const safeLearningStyle = learningStyle || 'mixed'
 
     let systemPrompt = ''
     let aiType: 'study-mode' | 'guided-learning' = 'study-mode'
@@ -117,7 +139,7 @@ export async function POST(request: NextRequest) {
       messages,
       aiType,
       'en',
-      3,
+      1,
       {
         tutorMode,
         studentLevel,
@@ -132,13 +154,13 @@ export async function POST(request: NextRequest) {
     const analytics = generateLearningAnalytics(messages, aiResponse, sessionContext)
     
     // Suggest next learning activities
-    const nextActivities = suggestNextActivities(tutorMode, topic, subject, analytics)
+    const nextActivities = suggestNextActivities(safeMode, topic, subject, analytics)
 
     return NextResponse.json({
       response: aiResponse,
       analytics,
       nextActivities,
-      studyTips: generateStudyTips(topic, subject, learningStyle),
+      studyTips: generateStudyTips(topic, subject, safeLearningStyle),
       progressUpdate: updateLearningProgress(sessionContext, analytics)
     })
 

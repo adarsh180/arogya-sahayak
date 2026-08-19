@@ -6,22 +6,21 @@ module.exports = {
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './contexts/**/*.{js,ts,jsx,tsx,mdx}',
   ],
-  darkMode: false,
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        // Apple-inspired color palette
         primary: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
+          50: '#edf8f4',
+          100: '#d5eee5',
+          200: '#acdccc',
+          300: '#75c2ab',
+          400: '#3ba287',
+          500: '#167f68',
+          600: '#0e6856',
+          700: '#0f5347',
+          800: '#10433b',
+          900: '#0d3731',
         },
         medical: {
           50: '#f0fdf4',
@@ -105,8 +104,8 @@ module.exports = {
         xs: '2px',
       },
       fontFamily: {
-        sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
-        display: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-sans)', 'Inter', 'Segoe UI', 'sans-serif'],
+        display: ['var(--font-sans)', 'Inter', 'Segoe UI', 'sans-serif'],
       },
       fontSize: {
         'xs': ['0.75rem', { lineHeight: '1rem' }],

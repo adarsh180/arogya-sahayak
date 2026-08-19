@@ -1,9 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { callAI } from '@/lib/ai'
+import { getServerSession } from 'next-auth'
+import { z } from 'zod'
+import { authOptions } from '@/lib/auth'
+import { checkRateLimit, getRequestKey, parseJson, rateLimitResponse } from '@/lib/api-security'
+
+const testSchema = z.object({
+  exam: z.string().trim().min(2).max(60),
+  subject: z.string().trim().min(2).max(100),
+  questionCount: z.coerce.number().int().min(3).max(25).default(10)
+})
 
 export async function POST(request: NextRequest) {
   try {
-    const { exam, subject, questionCount = 10 } = await request.json()
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const rate = checkRateLimit(`test:${getRequestKey(request, session.user.id)}`, 4, 60_000)
+    if (!rate.allowed) return rateLimitResponse(rate.retryAfter)
+    const parsed = await parseJson(request, testSchema)
+    if (!parsed.ok) return parsed.response
+    const { exam, subject, questionCount } = parsed.data
 
     const prompt = `Generate ${questionCount} multiple choice questions for ${exam.toUpperCase()} exam in ${subject} subject. 
 
@@ -35,7 +51,8 @@ Make questions challenging but appropriate for the exam level. Cover different t
       exam,
       subject,
       questions,
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
+      notice: 'AI-generated practice material. Verify disputed facts against your current curriculum and official sources.'
     })
 
   } catch (error) {

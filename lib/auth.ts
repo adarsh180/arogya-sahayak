@@ -5,13 +5,18 @@ import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from './prisma'
 import bcrypt from 'bcryptjs'
 
+const inferredAuthUrl = process.env.NEXTAUTH_URL?.trim() || process.env.URL?.trim()
+if (!process.env.NEXTAUTH_URL && inferredAuthUrl) process.env.NEXTAUTH_URL = inferredAuthUrl
+
+const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim()
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim()
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
+    ...(googleClientId && googleClientSecret
+      ? [GoogleProvider({ clientId: googleClientId, clientSecret: googleClientSecret })]
+      : []),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -43,6 +48,7 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt'
   },
+  secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: '/auth/signin'
   },
@@ -68,7 +74,8 @@ export const authOptions: NextAuthOptions = {
             gender: true,
             location: true,
             preferredLanguage: true,
-            userType: true
+            userType: true,
+            onboardingCompleted: true
           }
         })
         
@@ -82,11 +89,15 @@ export const authOptions: NextAuthOptions = {
       return session
     },
     async redirect({ url, baseUrl }) {
-      // Redirect to dashboard after signin/signup
       if (url === baseUrl || url === `${baseUrl}/auth/signin` || url === `${baseUrl}/auth/signup`) {
         return `${baseUrl}/dashboard`
       }
-      return url
+      if (url.startsWith('/')) return `${baseUrl}${url}`
+      try {
+        return new URL(url).origin === new URL(baseUrl).origin ? url : baseUrl
+      } catch {
+        return baseUrl
+      }
     }
   }
 }

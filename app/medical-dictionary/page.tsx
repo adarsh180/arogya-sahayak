@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { 
-  BookOpen, Search, Heart, Brain, Eye, Stethoscope, 
-  Pill, Microscope, Star, Bookmark, Volume2, Copy,
-  Filter, ArrowRight, Zap, Target, Award
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  BookOpen, Search, Heart, Brain, Eye, Stethoscope,
+  Pill, Microscope, Star, Volume2, Copy, Loader2
 } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import toast from 'react-hot-toast'
@@ -35,21 +35,14 @@ export default function MedicalDictionary() {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
 
   const categories = [
-    { id: 'all', name: 'All Categories', icon: BookOpen, color: 'from-gray-500 to-gray-600' },
-    { id: 'anatomy', name: 'Anatomy', icon: Heart, color: 'from-red-500 to-pink-500' },
-    { id: 'cardiology', name: 'Cardiology', icon: Heart, color: 'from-red-500 to-rose-500' },
-    { id: 'neurology', name: 'Neurology', icon: Brain, color: 'from-purple-500 to-indigo-500' },
-    { id: 'ophthalmology', name: 'Ophthalmology', icon: Eye, color: 'from-blue-500 to-cyan-500' },
-    { id: 'pharmacology', name: 'Pharmacology', icon: Pill, color: 'from-green-500 to-emerald-500' },
-    { id: 'pathology', name: 'Pathology', icon: Microscope, color: 'from-orange-500 to-amber-500' },
-    { id: 'general', name: 'General Medicine', icon: Stethoscope, color: 'from-teal-500 to-cyan-500' }
-  ]
-
-  const difficulties = [
-    { id: 'all', name: 'All Levels', color: 'text-gray-600 dark:text-gray-400' },
-    { id: 'basic', name: 'Basic', color: 'text-green-600 dark:text-green-400' },
-    { id: 'intermediate', name: 'Intermediate', color: 'text-yellow-600 dark:text-yellow-400' },
-    { id: 'advanced', name: 'Advanced', color: 'text-red-600 dark:text-red-400' }
+    { id: 'all', name: 'All Categories', icon: BookOpen },
+    { id: 'anatomy', name: 'Anatomy', icon: Heart },
+    { id: 'cardiology', name: 'Cardiology', icon: Heart },
+    { id: 'neurology', name: 'Neurology', icon: Brain },
+    { id: 'ophthalmology', name: 'Ophthalmology', icon: Eye },
+    { id: 'pharmacology', name: 'Pharmacology', icon: Pill },
+    { id: 'pathology', name: 'Pathology', icon: Microscope },
+    { id: 'general', name: 'General Medicine', icon: Stethoscope }
   ]
 
   useEffect(() => {
@@ -77,6 +70,7 @@ export default function MedicalDictionary() {
 
     setIsLoading(true)
     try {
+      // Use AI-powered search for real-time medical definitions
       const response = await fetch('/api/medical-dictionary/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -91,10 +85,11 @@ export default function MedicalDictionary() {
         const data = await response.json()
         setSearchResults(data.results || [])
       } else {
-        toast.error('Failed to search medical terms')
+        toast.error('Failed to search. Please try again.')
       }
     } catch (error) {
-      toast.error('Network error')
+      console.error('Search error:', error)
+      toast.error('Network error. Please check your connection.')
     } finally {
       setIsLoading(false)
     }
@@ -136,269 +131,319 @@ export default function MedicalDictionary() {
     })
   }
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'basic': return 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300'
-      case 'intermediate': return 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300'
-      case 'advanced': return 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300'
-      default: return 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
-    }
-  }
-
-  const filteredResults = showFavoritesOnly 
+  const filteredResults = showFavoritesOnly
     ? searchResults.filter(term => favorites.includes(term.id))
     : searchResults
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-medical-50 dark:from-dark-900 dark:via-dark-800 dark:to-dark-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
+      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-zinc-600 animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-medical-50 dark:from-dark-900 dark:via-dark-800 dark:to-dark-900 theme-transition">
-      <Navbar />
-      
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-12 animate-fade-in">
-          <div className="relative mb-8">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary-400 to-medical-400 rounded-full blur-3xl opacity-20 animate-pulse"></div>
-            <div className="relative p-6 bg-gradient-to-r from-primary-100 to-medical-100 dark:from-primary-900/30 dark:to-medical-900/30 rounded-full w-24 h-24 mx-auto flex items-center justify-center">
-              <BookOpen className="h-12 w-12 text-primary-600 dark:text-primary-400 animate-bounce-gentle" />
-            </div>
-          </div>
-          
-          <h1 className="text-4xl lg:text-6xl font-black mb-6">
-            <span className="gradient-text">Medical Dictionary</span>
-          </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Explore comprehensive medical terminology with AI-powered definitions, pronunciations, and examples
-          </p>
-        </div>
-
-        {/* Search Section */}
-        <div className="card mb-8 animate-slide-up">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl text-white">
-              <Search className="h-6 w-6" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Search Medical Terms</h2>
-          </div>
-
-          <div className="space-y-6">
-            {/* Search Input */}
-            <div className="relative">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && searchMedicalTerms()}
-                placeholder="Search for medical terms, conditions, procedures..."
-                className="w-full px-6 py-4 text-lg border-2 border-gray-200 dark:border-dark-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white/90 dark:bg-dark-800/90 backdrop-blur-sm transition-all duration-300 text-gray-900 dark:text-gray-100 pr-16"
-              />
-              <button
-                onClick={searchMedicalTerms}
-                disabled={isLoading || !searchTerm.trim()}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 btn-primary px-6 py-2 disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                ) : (
-                  <Search className="h-5 w-5" />
-                )}
-              </button>
-            </div>
-
-            {/* Filters */}
-            <div className="grid md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Category</label>
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="input-field focus-ring"
-                >
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>{category.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Difficulty</label>
-                <select
-                  value={selectedDifficulty}
-                  onChange={(e) => setSelectedDifficulty(e.target.value)}
-                  className="input-field focus-ring"
-                >
-                  {difficulties.map((difficulty) => (
-                    <option key={difficulty.id} value={difficulty.id}>{difficulty.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex items-end">
-                <button
-                  onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                  className={`w-full px-4 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 ${
-                    showFavoritesOnly
-                      ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white'
-                      : 'bg-gray-100 dark:bg-dark-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-600'
-                  }`}
-                >
-                  <Star className={`h-5 w-5 ${showFavoritesOnly ? 'fill-current' : ''}`} />
-                  <span>Favorites</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Categories Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {categories.slice(1).map((category, index) => (
-            <button
-              key={category.id}
-              onClick={() => {
-                setSelectedCategory(category.id)
-                setSearchTerm(category.name)
-                searchMedicalTerms()
-              }}
-              className={`group p-6 bg-gradient-to-br ${category.color.replace('500', '50').replace('600', '100')} dark:${category.color.replace('500', '900/20').replace('600', '800/20')} rounded-2xl border border-gray-200/50 dark:border-dark-700/50 hover:shadow-lg transition-all duration-300 transform hover:scale-105 animate-slide-up`}
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <div className={`p-3 bg-gradient-to-r ${category.color} rounded-xl text-white mb-4 group-hover:scale-110 transition-transform duration-300 mx-auto w-fit`}>
-                <category.icon className="h-6 w-6" />
-              </div>
-              <h3 className="font-bold text-gray-900 dark:text-gray-100 text-center group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-300">
-                {category.name}
-              </h3>
-            </button>
-          ))}
-        </div>
-
-        {/* Search Results */}
-        {filteredResults.length > 0 && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                Search Results ({filteredResults.length})
-              </h3>
-            </div>
-
-            <div className="grid gap-6">
-              {filteredResults.map((term, index) => (
-                <div
-                  key={term.id}
-                  className="card hover-lift animate-slide-up"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h4 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{term.term}</h4>
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getDifficultyColor(term.difficulty)}`}>
-                          {term.difficulty}
-                        </span>
-                        <span className="px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 rounded-full text-xs font-semibold">
-                          {term.category}
-                        </span>
-                      </div>
-                      
-                      {term.pronunciation && (
-                        <div className="flex items-center space-x-2 mb-3">
-                          <span className="text-sm text-gray-600 dark:text-gray-400 italic">/{term.pronunciation}/</span>
-                          <button
-                            onClick={() => speakTerm(term.term)}
-                            className="p-1 hover:bg-gray-100 dark:hover:bg-dark-700 rounded transition-colors"
-                          >
-                            <Volume2 className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => toggleFavorite(term.id)}
-                        className={`p-2 rounded-lg transition-all duration-300 ${
-                          favorites.includes(term.id)
-                            ? 'text-yellow-500 bg-yellow-100 dark:bg-yellow-900/20'
-                            : 'text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
-                        }`}
-                      >
-                        <Star className={`h-5 w-5 ${favorites.includes(term.id) ? 'fill-current' : ''}`} />
-                      </button>
-                      <button
-                        onClick={() => copyToClipboard(`${term.term}: ${term.definition}`)}
-                        className="p-2 text-gray-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-all duration-300"
-                      >
-                        <Copy className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4 text-lg">
-                    {term.definition}
-                  </p>
-
-                  {term.examples && term.examples.length > 0 && (
-                    <div className="mb-4">
-                      <h5 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Examples:</h5>
-                      <ul className="space-y-1">
-                        {term.examples.map((example, idx) => (
-                          <li key={idx} className="text-gray-600 dark:text-gray-400 flex items-start">
-                            <span className="text-primary-500 mr-2">•</span>
-                            <span>{example}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {term.relatedTerms && term.relatedTerms.length > 0 && (
-                    <div>
-                      <h5 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Related Terms:</h5>
-                      <div className="flex flex-wrap gap-2">
-                        {term.relatedTerms.map((relatedTerm, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => {
-                              setSearchTerm(relatedTerm)
-                              searchMedicalTerms()
-                            }}
-                            className="px-3 py-1 bg-gray-100 dark:bg-dark-700 text-gray-700 dark:text-gray-300 rounded-full text-sm hover:bg-primary-100 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-300 transition-colors duration-300"
-                          >
-                            {relatedTerm}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {searchTerm && !isLoading && filteredResults.length === 0 && (
-          <div className="text-center py-16">
-            <div className="p-6 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-dark-700 to-dark-600 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-              <Search className="h-12 w-12 text-gray-400" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">No Results Found</h3>
-            <p className="text-gray-600 dark:text-gray-300 max-w-md mx-auto">
-              Try searching with different terms or check your spelling. You can also browse by category above.
-            </p>
-          </div>
-        )}
+    <div className="min-h-screen bg-[#0f0f0f] relative overflow-hidden">
+      {/* Smoky Background Animations */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.03, 0.06, 0.03],
+            x: [0, 50, 0],
+            y: [0, -50, 0],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-0 left-1/4 w-[800px] h-[800px] rounded-full bg-purple-500 blur-[150px]"
+        />
+        <motion.div
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: [0.02, 0.05, 0.02],
+            x: [0, -80, 0],
+            y: [0, 80, 0],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 5
+          }}
+          className="absolute bottom-0 right-1/4 w-[700px] h-[700px] rounded-full bg-cyan-400 blur-[150px]"
+        />
+        <motion.div
+          animate={{
+            scale: [1, 1.1, 1],
+            opacity: [0.02, 0.04, 0.02],
+            x: [0, 60, 0],
+            y: [0, -60, 0],
+          }}
+          transition={{
+            duration: 18,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 10
+          }}
+          className="absolute top-1/2 right-1/3 w-[600px] h-[600px] rounded-full bg-pink-500 blur-[150px]"
+        />
       </div>
 
+      <Navbar />
 
+      <div className="pt-20 pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-xl bg-zinc-900 flex items-center justify-center">
+                <BookOpen className="w-6 h-6 text-zinc-400" />
+              </div>
+              <h1 className="text-4xl font-normal text-zinc-100">Medical Dictionary</h1>
+            </div>
+            <p className="text-lg text-zinc-500">
+              Explore medical terminology with AI-powered definitions and pronunciations
+            </p>
+          </motion.div>
+
+          {/* Search Section */}
+          <div className="bg-[#1a1a1a] border border-zinc-800 rounded-2xl p-6 mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Search className="w-5 h-5 text-zinc-400" />
+              <h2 className="text-lg font-semibold text-zinc-200">Search Medical Terms</h2>
+            </div>
+
+            <div className="space-y-4">
+              {/* Search Input */}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && searchMedicalTerms()}
+                  placeholder="Search for medical terms, conditions, procedures..."
+                  className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 text-zinc-200 placeholder:text-zinc-600 rounded-xl focus:outline-none focus:border-zinc-700 pr-24"
+                />
+                <button
+                  onClick={searchMedicalTerms}
+                  disabled={isLoading || !searchTerm.trim()}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Search className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+
+              {/* Filters */}
+              <div className="grid md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-400 mb-2">Category</label>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="w-full px-4 py-2 bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-xl focus:outline-none focus:border-zinc-700"
+                  >
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>{category.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-zinc-400 mb-2">Difficulty</label>
+                  <select
+                    value={selectedDifficulty}
+                    onChange={(e) => setSelectedDifficulty(e.target.value)}
+                    className="w-full px-4 py-2 bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-xl focus:outline-none focus:border-zinc-700"
+                  >
+                    <option value="all">All Levels</option>
+                    <option value="basic">Basic</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                  </select>
+                </div>
+
+                <div className="flex items-end">
+                  <button
+                    onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                    className={`w-full px-4 py-2 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 ${showFavoritesOnly
+                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                      : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border border-zinc-800'
+                      }`}
+                  >
+                    <Star className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
+                    <span>Favorites</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Categories Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {categories.slice(1).map((category, index) => (
+              <motion.button
+                key={category.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                onClick={() => {
+                  setSelectedCategory(category.id)
+                  setSearchTerm(category.name)
+                  searchMedicalTerms()
+                }}
+                className="group bg-[#1a1a1a] border border-zinc-800 hover:border-zinc-700 rounded-2xl p-5 transition-all"
+              >
+                <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center mx-auto mb-3 group-hover:bg-zinc-800 transition-colors">
+                  <category.icon className="w-5 h-5 text-zinc-400" />
+                </div>
+                <h3 className="text-sm font-medium text-zinc-300 text-center group-hover:text-white transition-colors">
+                  {category.name}
+                </h3>
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Search Results */}
+          <AnimatePresence mode="popLayout">
+            {filteredResults.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-4"
+              >
+                <h3 className="text-xl font-semibold text-zinc-200 mb-4">
+                  Results ({filteredResults.length})
+                </h3>
+
+                {filteredResults.map((term, index) => (
+                  <motion.div
+                    key={term.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="bg-[#1a1a1a] border border-zinc-800 rounded-2xl p-6 hover:border-zinc-700 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="text-2xl font-semibold text-zinc-100">{term.term}</h4>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${term.difficulty === 'basic' ? 'bg-green-500/20 text-green-400' :
+                            term.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
+                              'bg-red-500/20 text-red-400'
+                            }`}>
+                            {term.difficulty}
+                          </span>
+                          <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-medium">
+                            {term.category}
+                          </span>
+                        </div>
+
+                        {term.pronunciation && (
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="text-sm text-zinc-500 italic">/{term.pronunciation}/</span>
+                            <button
+                              onClick={() => speakTerm(term.term)}
+                              className="p-1 hover:bg-zinc-800 rounded transition-colors"
+                            >
+                              <Volume2 className="w-4 h-4 text-zinc-600" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => toggleFavorite(term.id)}
+                          className={`p-2 rounded-lg transition-colors ${favorites.includes(term.id)
+                            ? 'text-yellow-400 bg-yellow-500/20'
+                            : 'text-zinc-600 hover:text-yellow-400 hover:bg-yellow-500/10'
+                            }`}
+                        >
+                          <Star className={`w-5 h-5 ${favorites.includes(term.id) ? 'fill-current' : ''}`} />
+                        </button>
+                        <button
+                          onClick={() => copyToClipboard(`${term.term}: ${term.definition}`)}
+                          className="p-2 text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 rounded-lg transition-colors"
+                        >
+                          <Copy className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <p className="text-zinc-300 leading-relaxed mb-4">
+                      {term.definition}
+                    </p>
+
+                    {term.examples && term.examples.length > 0 && (
+                      <div className="mb-4">
+                        <h5 className="font-medium text-zinc-400 mb-2 text-sm">Examples:</h5>
+                        <ul className="space-y-1">
+                          {term.examples.map((example, idx) => (
+                            <li key={idx} className="text-sm text-zinc-500 flex items-start">
+                              <span className="text-zinc-700 mr-2">•</span>
+                              <span>{example}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {term.relatedTerms && term.relatedTerms.length > 0 && (
+                      <div>
+                        <h5 className="font-medium text-zinc-400 mb-2 text-sm">Related Terms:</h5>
+                        <div className="flex flex-wrap gap-2">
+                          {term.relatedTerms.map((relatedTerm, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                setSearchTerm(relatedTerm)
+                                searchMedicalTerms()
+                              }}
+                              className="px-3 py-1 bg-zinc-900 text-zinc-400 rounded-full text-xs hover:bg-zinc-800 hover:text-zinc-300 transition-colors"
+                            >
+                              {relatedTerm}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Empty State */}
+          {searchTerm && !isLoading && filteredResults.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-16"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-zinc-900 flex items-center justify-center mx-auto mb-4">
+                <Search className="w-8 h-8 text-zinc-700" />
+              </div>
+              <h3 className="text-xl font-semibold text-zinc-300 mb-2">No Results Found</h3>
+              <p className="text-zinc-600 max-w-md mx-auto">
+                Try searching with different terms or browse by category above.
+              </p>
+            </motion.div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

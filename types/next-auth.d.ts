@@ -13,6 +13,7 @@ declare module "next-auth" {
       location?: string | null
       preferredLanguage?: string | null
       userType?: string | null
+      onboardingCompleted?: boolean
     }
   }
 
@@ -24,6 +25,7 @@ declare module "next-auth" {
     location?: string | null
     preferredLanguage?: string | null
     userType?: string | null
+    onboardingCompleted?: boolean
   }
 }
 

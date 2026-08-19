@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
+import { z } from 'zod'
+import { parseJson } from '@/lib/api-security'
+
+const recordSchema = z.object({
+  type: z.string().trim().min(2).max(50),
+  value: z.union([z.string().max(2_000), z.record(z.unknown())]),
+  unit: z.string().trim().max(40).optional().nullable(),
+  notes: z.string().trim().max(1_000).optional().nullable()
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,9 +20,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { type, value, unit, notes } = await request.json()
-
-
+    const parsed = await parseJson(request, recordSchema)
+    if (!parsed.ok) return parsed.response
+    const { type, value, unit, notes } = parsed.data
 
     const healthRecord = await prisma.healthRecord.create({
       data: {
@@ -41,7 +51,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type')
 
-    const where: any = { userId: session.user.id }
+    const where: Prisma.HealthRecordWhereInput = { userId: session.user.id }
     if (type) {
       where.type = type
     }

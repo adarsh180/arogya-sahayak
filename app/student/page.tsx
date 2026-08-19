@@ -1,412 +1,68 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import {
-  GraduationCap, BookOpen, Brain, Target, Trophy, Clock,
-  TrendingUp, FileText, Calendar, Users, Star, ArrowRight,
-  Play, Zap, Award, CheckCircle, BarChart3, PenTool, Lightbulb
-} from 'lucide-react'
-
+import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import { ArrowRight, BarChart3, BookOpen, Brain, CalendarDays, CheckCircle2, Clock3, FileQuestion, Flame, GraduationCap, Target } from 'lucide-react'
 import Navbar from '@/components/Navbar'
-import { MEDICAL_EXAMS } from '@/lib/ai'
 
-export default function StudentCorner() {
-  const { data: session, status } = useSession()
+type Stats = { totalTests: number; averageScore: number; studyHours: number; streak: number }
+
+const paths = [
+  { href: '/chat?type=student', icon: Brain, title: 'Guided study', copy: 'Work through a concept with retrieval questions and clinical reasoning.' },
+  { href: '/mock-tests', icon: FileQuestion, title: 'Practice tests', copy: 'Generate labelled practice material, then review every explanation.' },
+  { href: '/study-planner', icon: CalendarDays, title: 'Study plan', copy: 'Turn a syllabus into realistic, time-bounded sessions.' },
+  { href: '/analytics', icon: BarChart3, title: 'Learning analytics', copy: 'Use completed activity—not invented scores—to reflect on progress.' },
+]
+
+export default function StudentPage() {
   const router = useRouter()
-  const [selectedExam, setSelectedExam] = useState('neet-ug')
-  const [selectedSubject, setSelectedSubject] = useState('physics')
-  const [studyStats, setStudyStats] = useState({
-    totalTests: 0,
-    averageScore: 0,
-    studyHours: 0,
-    streak: 0
-  })
-  const [progressData, setProgressData] = useState<any[]>([])
+  const { data: session, status } = useSession()
+  const [stats, setStats] = useState<Stats>({ totalTests: 0, averageScore: 0, studyHours: 0, streak: 0 })
   const [loading, setLoading] = useState(true)
-  const [generatingTest, setGeneratingTest] = useState(false)
-  const [testGenerated, setTestGenerated] = useState(false)
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/signin')
-    } else if (session) {
-      fetchStudentData()
-      const interval = setInterval(fetchStudentData, 30000) // Update every 30 seconds
-      return () => clearInterval(interval)
-    }
-  }, [status, session, router])
+    if (status === 'unauthenticated') router.replace('/auth/signin?callbackUrl=/student')
+    if (status === 'authenticated') fetch('/api/student/stats').then(response => response.ok ? response.json() : null).then(data => data && setStats(data)).finally(() => setLoading(false))
+  }, [router, status])
 
-  const fetchStudentData = async () => {
-    try {
-      const [statsRes, progressRes] = await Promise.all([
-        fetch('/api/student/stats'),
-        fetch('/api/student/progress')
-      ])
-
-      if (statsRes.ok) {
-        const stats = await statsRes.json()
-        setStudyStats(stats)
-      }
-
-      if (progressRes.ok) {
-        const progress = await progressRes.json()
-        setProgressData(progress)
-      }
-    } catch (error) {
-      console.error('Failed to fetch student data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
-      </div>
-    )
-  }
-
-  const quickActions = [
-    {
-      title: 'AI Study Chat',
-      description: 'Get personalized tutoring and doubt clearing',
-      icon: Brain,
-      href: '/chat?type=student',
-      color: 'from-blue-500 to-purple-600',
-      bgColor: 'from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20'
-    },
-    {
-      title: 'Mock Tests',
-      description: 'Practice with exam-pattern questions',
-      icon: FileText,
-      href: '/mock-tests',
-      color: 'from-green-500 to-emerald-600',
-      bgColor: 'from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20'
-    },
-    {
-      title: 'Study Planner',
-      description: 'Organize your preparation schedule',
-      icon: Calendar,
-      href: '/study-planner',
-      color: 'from-orange-500 to-red-600',
-      bgColor: 'from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20'
-    },
-    {
-      title: 'Performance Analytics',
-      description: 'Track your progress and improvement',
-      icon: BarChart3,
-      href: '/analytics',
-      color: 'from-purple-500 to-pink-600',
-      bgColor: 'from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20'
-    }
-  ]
-
-  const subjects = progressData.length > 0 ? progressData : [
-    { name: 'Physics', progress: Math.floor(Math.random() * 100), color: 'bg-blue-500' },
-    { name: 'Chemistry', progress: Math.floor(Math.random() * 100), color: 'bg-green-500' },
-    { name: 'Biology', progress: Math.floor(Math.random() * 100), color: 'bg-red-500' },
-    { name: 'Mathematics', progress: Math.floor(Math.random() * 100), color: 'bg-purple-500' }
-  ]
-
-  const generateAITest = async () => {
-    setGeneratingTest(true)
-    try {
-      const response = await fetch('/api/student/generate-test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          exam: selectedExam,
-          subject: selectedSubject,
-          questionCount: 10
-        })
-      })
-
-      if (response.ok) {
-        const testData = await response.json()
-        setTestGenerated(true)
-        // Redirect to test page with generated questions
-        router.push(`/mock-tests/test?id=${testData.testId}`)
-      } else {
-        console.error('Failed to generate test')
-      }
-    } catch (error) {
-      console.error('Error generating test:', error)
-    } finally {
-      setGeneratingTest(false)
-    }
-  }
-
-  const recentAchievements = [
-    { title: 'Physics Master', description: 'Completed 50 physics questions', icon: Trophy, color: 'text-yellow-500' },
-    { title: 'Study Streak', description: '7 days continuous study', icon: Target, color: 'text-green-500' },
-    { title: 'Mock Test Pro', description: 'Scored 85% in latest test', icon: Award, color: 'text-blue-500' }
-  ]
+  if (status === 'loading' || loading) return <div className="as-segment-loader" role="status">Opening your learning space…</div>
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 theme-transition page-transition">
+    <div className="as-student-page">
       <Navbar />
+      <main id="main-content" className="as-student-dashboard as-container">
+        <header className="as-student-heading">
+          <div><span className="as-kicker">Medical learning workspace</span><h1>Study for durable understanding.</h1><p>Welcome{session?.user.name ? `, ${session.user.name.split(' ')[0]}` : ''}. Choose one focused action and finish it well.</p></div>
+          <Link href="/chat?type=student" className="as-button">Start guided study <ArrowRight /></Link>
+        </header>
 
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        {/* Hero Section */}
-        <div className="text-center mb-12 animate-fade-in">
-          <div className="relative mb-8">
-            <div className="p-6 bg-gradient-to-r from-primary-100 to-medical-100 dark:from-primary-900/30 dark:to-medical-900/30 rounded-full w-24 h-24 mx-auto flex items-center justify-center">
-              <GraduationCap className="h-12 w-12 text-primary-600 dark:text-primary-400" />
-            </div>
-          </div>
+        <section className="as-learning-stats" aria-label="Learning activity">
+          <article><FileQuestion /><span><strong>{stats.totalTests}</strong>completed tests</span></article>
+          <article><Target /><span><strong>{stats.totalTests ? `${stats.averageScore}%` : '—'}</strong>average score</span></article>
+          <article><Clock3 /><span><strong>{Math.round(stats.studyHours / 60 * 10) / 10}h</strong>planned study</span></article>
+          <article><Flame /><span><strong>{stats.streak}</strong>day activity streak</span></article>
+        </section>
 
-          <h1 className="text-4xl lg:text-6xl font-black mb-6">
-            <span className="gradient-text">Student Corner</span>
-          </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Master medical entrance exams with AI-powered personalized learning, practice tests, and comprehensive study materials
-          </p>
+        <div className="as-learning-grid">
+          <section className="as-learning-paths">
+            <div className="as-card-heading"><div><span>Choose a learning action</span><h2>What will you finish now?</h2></div><GraduationCap /></div>
+            <div>{paths.map(({ href, icon: Icon, title, copy }, index) => <Link href={href} key={title}><span className="as-path-index">0{index + 1}</span><Icon /><div><strong>{title}</strong><p>{copy}</p></div><ArrowRight /></Link>)}</div>
+          </section>
+
+          <aside className="as-focus-card">
+            <span>Suggested session</span>
+            <h2>25 minutes.<br />One difficult concept.</h2>
+            <ol><li><i>05</i><div><strong>Retrieve</strong><p>Write what you already know without notes.</p></div></li><li><i>12</i><div><strong>Reason</strong><p>Work through one case or mechanism.</p></div></li><li><i>08</i><div><strong>Correct</strong><p>Compare, close gaps and schedule recall.</p></div></li></ol>
+            <Link href="/chat?type=student">Open a focus session <ArrowRight /></Link>
+          </aside>
+
+          <section className="as-learning-boundary">
+            <BookOpen /><div><span>Practice integrity</span><h2>Generated questions are practice—not official exam material.</h2><p>Always verify disputed facts against current textbooks, guidelines and the official syllabus. Arogya should help you reason, not manufacture confidence.</p></div><CheckCircle2 />
+          </section>
         </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <div className="card hover-lift animate-scale-in">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">Mock Tests</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{studyStats.totalTests}</p>
-              </div>
-              <div className="p-3 bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/50 rounded-xl">
-                <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-              </div>
-            </div>
-          </div>
-
-          <div className="card hover-lift animate-scale-in" style={{ animationDelay: '100ms' }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">Avg Score</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{studyStats.averageScore}%</p>
-              </div>
-              <div className="p-3 bg-gradient-to-r from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/50 rounded-xl">
-                <Target className="h-8 w-8 text-green-600 dark:text-green-400" />
-              </div>
-            </div>
-          </div>
-
-          <div className="card hover-lift animate-scale-in" style={{ animationDelay: '200ms' }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">Study Hours</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{studyStats.studyHours}</p>
-              </div>
-              <div className="p-3 bg-gradient-to-r from-purple-100 to-purple-200 dark:from-purple-900/50 dark:to-purple-800/50 rounded-xl">
-                <Clock className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-              </div>
-            </div>
-          </div>
-
-          <div className="card hover-lift animate-scale-in" style={{ animationDelay: '300ms' }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">Streak</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{studyStats.streak}</p>
-              </div>
-              <div className="p-3 bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/50 dark:to-orange-800/50 rounded-xl">
-                <TrendingUp className="h-8 w-8 text-orange-600 dark:text-orange-400" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Quick Actions */}
-          <div className="lg:col-span-2 space-y-8">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-8">Quick Actions</h2>
-            <div className="grid md:grid-cols-2 gap-6 mb-12">
-              {quickActions.map((action, index) => (
-                <Link
-                  key={action.title}
-                  href={action.href}
-                  className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${action.bgColor} p-6 hover:shadow-2xl transition-all duration-500 transform hover:scale-105 animate-slide-up border border-gray-200/50 dark:border-dark-700/50 cursor-pointer`}
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <div className="relative z-10">
-                    <div className={`inline-flex p-3 rounded-xl bg-gradient-to-r ${action.color} text-white mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                      <action.icon className="h-6 w-6" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-300">
-                      {action.title}
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
-                      {action.description}
-                    </p>
-                    <div className="flex items-center text-primary-600 dark:text-primary-400 font-semibold group-hover:translate-x-2 transition-transform duration-300">
-                      Get Started <ArrowRight className="h-4 w-4 ml-2" />
-                    </div>
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                </Link>
-              ))}
-            </div>
-
-            {/* Subject Progress */}
-            <div className="card animate-slide-up" style={{ animationDelay: '400ms' }}>
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Subject Progress</h3>
-                {loading && <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>}
-              </div>
-              <div className="space-y-6">
-                {subjects.map((subject, index) => (
-                  <div key={subject.name} className="group">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">{subject.name}</span>
-                      <span className="text-sm font-bold text-gray-600 dark:text-gray-400">{subject.progress}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-dark-700 rounded-full h-3 overflow-hidden">
-                      <div
-                        className={`h-full ${subject.color} rounded-full transition-all duration-1000 ease-out group-hover:animate-pulse`}
-                        style={{
-                          width: `${subject.progress}%`,
-                          animationDelay: `${index * 200}ms`
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Real-time Performance Chart */}
-            <div className="card animate-slide-up" style={{ animationDelay: '500ms' }}>
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Performance Trend</h3>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs text-gray-500">Live</span>
-                </div>
-              </div>
-              <div className="h-48 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-dark-800 dark:to-dark-700 rounded-xl p-4 flex items-end justify-between space-x-2">
-                {[65, 72, 68, 78, 85, 82, 88].map((score, index) => (
-                  <div key={index} className="flex-1 flex flex-col items-center">
-                    <div
-                      className="w-full bg-gradient-to-t from-primary-500 to-primary-400 rounded-t-lg transition-all duration-1000 ease-out"
-                      style={{
-                        height: `${(score / 100) * 100}%`,
-                        animationDelay: `${index * 100}ms`
-                      }}
-                    ></div>
-                    <span className="text-xs text-gray-500 mt-2">{score}%</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* AI Test Generator */}
-            <div className="card animate-slide-up" style={{ animationDelay: '500ms' }}>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-                <Brain className="h-5 w-5 mr-2 text-primary-500" />
-                AI Test Generator
-              </h3>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Target Exam
-                  </label>
-                  <select
-                    value={selectedExam}
-                    onChange={(e) => setSelectedExam(e.target.value)}
-                    className="input-field focus-ring"
-                  >
-                    {Object.entries(MEDICAL_EXAMS).map(([code, name]) => (
-                      <option key={code} value={code}>{name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Subject
-                  </label>
-                  <select
-                    value={selectedSubject}
-                    onChange={(e) => setSelectedSubject(e.target.value)}
-                    className="input-field focus-ring"
-                  >
-                    <option value="physics">Physics</option>
-                    <option value="chemistry">Chemistry</option>
-                    <option value="biology">Biology</option>
-                    <option value="mathematics">Mathematics</option>
-                    <option value="mixed">Mixed (All Subjects)</option>
-                  </select>
-                </div>
-
-                <button
-                  onClick={generateAITest}
-                  disabled={generatingTest}
-                  className="w-full btn-primary flex items-center justify-center space-x-2"
-                >
-                  {generatingTest ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Generating Test...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="h-4 w-4" />
-                      <span>Generate AI Test</span>
-                    </>
-                  )}
-                </button>
-
-                {testGenerated && (
-                  <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
-                    <p className="text-sm text-green-700 dark:text-green-400 font-medium">
-                      ✅ Test generated successfully! Redirecting...
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Recent Achievements */}
-            <div className="card animate-slide-up" style={{ animationDelay: '600ms' }}>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Recent Achievements</h3>
-              <div className="space-y-4">
-                {recentAchievements.map((achievement, index) => (
-                  <div key={achievement.title} className="flex items-start space-x-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors duration-300">
-                    <div className={`p-2 rounded-lg bg-gray-100 dark:bg-dark-700 ${achievement.color}`}>
-                      <achievement.icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-gray-100">{achievement.title}</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{achievement.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Study Tips */}
-            <div className="card animate-slide-up" style={{ animationDelay: '700ms' }}>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-                <Star className="h-5 w-5 mr-2 text-yellow-500" />
-                Today's Study Tip
-              </h3>
-              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-4 rounded-xl border border-yellow-200/50 dark:border-yellow-800/50">
-                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                  <strong className="text-yellow-700 dark:text-yellow-400">Active Recall:</strong> Instead of just re-reading notes, test yourself frequently. This strengthens memory pathways and improves long-term retention.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-    </div >
+      </main>
+    </div>
   )
 }

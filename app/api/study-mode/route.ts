@@ -1,8 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { callAI } from '@/lib/ai'
+import { getServerSession } from 'next-auth'
+import { z } from 'zod'
+import { authOptions } from '@/lib/auth'
+import { checkRateLimit, getRequestKey, parseJson, rateLimitResponse } from '@/lib/api-security'
+
+const studySchema = z.object({
+  action: z.enum(['start-session', 'guided-learning', 'practice-mode', 'review-session', 'adaptive-help', 'continue']).default('continue'),
+  topic: z.string().trim().min(1).max(180),
+  subject: z.string().trim().min(1).max(120),
+  difficulty: z.string().max(80).default('adaptive'),
+  learningStyle: z.string().max(80).default('mixed'),
+  messages: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().min(1).max(4_000) })).max(30).default([]),
+  studyContext: z.record(z.unknown()).optional()
+})
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const rate = checkRateLimit(`study:${getRequestKey(request, session.user.id)}`, 10)
+    if (!rate.allowed) return rateLimitResponse(rate.retryAfter)
+    const parsed = await parseJson(request, studySchema)
+    if (!parsed.ok) return parsed.response
     const { 
       action, 
       topic, 
@@ -11,7 +31,9 @@ export async function POST(request: NextRequest) {
       learningStyle, 
       messages, 
       studyContext 
-    } = await request.json()
+    } = parsed.data
+    const safeMessages = messages || []
+    const safeDifficulty = difficulty || 'adaptive'
 
     let prompt = ''
     let aiType: 'study-mode' | 'guided-learning' = 'study-mode'
@@ -80,14 +102,14 @@ export async function POST(request: NextRequest) {
         break
 
       default:
-        prompt = messages[messages.length - 1]?.content || 'Continue the study session'
+        prompt = safeMessages[safeMessages.length - 1]?.content || 'Continue the study session'
     }
 
     const aiResponse = await callAI(
-      messages || [{ role: 'user', content: prompt }],
+      safeMessages.length ? safeMessages : [{ role: 'user', content: prompt }],
       aiType,
       'en',
-      3,
+      1,
       studyContext
     )
 
@@ -97,7 +119,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       response: aiResponse,
       analytics,
-      suggestions: generateStudySuggestions(topic, subject, difficulty),
+      suggestions: generateStudySuggestions(topic, subject, safeDifficulty),
       nextSteps: getNextLearningSteps(studyContext)
     })
 

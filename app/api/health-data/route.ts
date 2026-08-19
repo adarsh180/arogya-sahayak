@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { Prisma } from '@prisma/client'
+import { z } from 'zod'
+import { parseJson } from '@/lib/api-security'
+
+const healthDataSchema = z.object({
+  type: z.string().trim().min(2).max(50),
+  value: z.record(z.union([z.string().max(200), z.number(), z.boolean()])),
+  analysis: z.record(z.unknown())
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,7 +19,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { type, value, analysis } = await request.json()
+    const parsed = await parseJson(request, healthDataSchema)
+    if (!parsed.ok) return parsed.response
+    const { type, value, analysis } = parsed.data
 
     const healthData = await prisma.healthData.create({
       data: {
@@ -39,7 +50,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type')
 
-    const where: any = { userEmail: session.user.email }
+    const where: Prisma.HealthDataWhereInput = { userEmail: session.user.email }
     if (type) where.type = type
 
     const healthData = await prisma.healthData.findMany({
@@ -50,8 +61,8 @@ export async function GET(request: NextRequest) {
 
     const formattedData = healthData.map(item => ({
       ...item,
-      value: JSON.parse(item.value),
-      analysis: JSON.parse(item.analysis)
+      value: safelyParse(item.value),
+      analysis: safelyParse(item.analysis)
     }))
 
     return NextResponse.json(formattedData)
@@ -59,4 +70,8 @@ export async function GET(request: NextRequest) {
     console.error('Health data fetch error:', error)
     return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 })
   }
+}
+
+function safelyParse(value: string) {
+  try { return JSON.parse(value) } catch { return {} }
 }

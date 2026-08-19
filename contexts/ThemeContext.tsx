@@ -1,52 +1,81 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
-type Theme = 'light' | 'dark'
+export type ThemePreference = 'light' | 'dark' | 'system'
+export type ResolvedTheme = 'light' | 'dark'
 
 interface ThemeContextType {
-  theme: Theme
+  theme: ThemePreference
+  resolvedTheme: ResolvedTheme
+  setTheme: (theme: ThemePreference) => void
   toggleTheme: () => void
 }
 
+const STORAGE_KEY = 'arogya-theme'
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
+function systemTheme(): ResolvedTheme {
+  if (typeof window === 'undefined') return 'light'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
+function applyTheme(preference: ThemePreference): ResolvedTheme {
+  const resolved = preference === 'system' ? systemTheme() : preference
+  const root = document.documentElement
+  root.classList.toggle('dark', resolved === 'dark')
+  root.dataset.theme = resolved
+  root.style.colorScheme = resolved
+  return resolved
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light')
+  const [theme, setThemeState] = useState<ThemePreference>('system')
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('light')
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as Theme
-    if (savedTheme) {
-      setTheme(savedTheme)
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setTheme('dark')
-    }
+    const stored = localStorage.getItem(STORAGE_KEY)
+    const legacy = localStorage.getItem('theme')
+    const initial = stored === 'light' || stored === 'dark' || stored === 'system'
+      ? stored
+      : legacy === 'light' || legacy === 'dark'
+        ? legacy
+        : 'system'
+
+    setThemeState(initial)
+    setResolvedTheme(applyTheme(initial))
   }, [])
 
   useEffect(() => {
-    localStorage.setItem('theme', theme)
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+    const onSystemChange = () => {
+      if (theme === 'system') setResolvedTheme(applyTheme('system'))
     }
+    media.addEventListener('change', onSystemChange)
+    return () => media.removeEventListener('change', onSystemChange)
   }, [theme])
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light')
-  }
+  const setTheme = useCallback((next: ThemePreference) => {
+    localStorage.setItem(STORAGE_KEY, next)
+    localStorage.removeItem('theme')
+    setThemeState(next)
+    setResolvedTheme(applyTheme(next))
+  }, [])
 
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
+  const toggleTheme = useCallback(() => {
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
+  }, [resolvedTheme, setTheme])
+
+  const value = useMemo(
+    () => ({ theme, resolvedTheme, setTheme, toggleTheme }),
+    [theme, resolvedTheme, setTheme, toggleTheme]
   )
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }
 
 export function useTheme() {
   const context = useContext(ThemeContext)
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider')
-  }
+  if (!context) throw new Error('useTheme must be used within a ThemeProvider')
   return context
 }
