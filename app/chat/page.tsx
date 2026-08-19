@@ -55,7 +55,7 @@ export default function ChatPage() {
   const [historyOpen, setHistoryOpen] = useState(false)
   const [chatType, setChatType] = useState<'medical' | 'student'>('medical')
   const [copiedId, setCopiedId] = useState<string>()
-  const endRef = useRef<HTMLDivElement>(null)
+  const messageScrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (status === 'unauthenticated') router.replace('/auth/signin?callbackUrl=/chat')
@@ -66,7 +66,17 @@ export default function ChatPage() {
     setChatType(new URLSearchParams(window.location.search).get('type') === 'student' ? 'student' : 'medical')
   }, [])
 
-  useEffect(() => endRef.current?.scrollIntoView({ behavior: 'smooth' }), [messages, busy])
+  useEffect(() => {
+    const scroller = messageScrollRef.current
+    if (!scroller || (!messages.length && !busy)) return
+    const frame = window.requestAnimationFrame(() => {
+      scroller.scrollTo({
+        top: scroller.scrollHeight,
+        behavior: messages.length > 2 ? 'smooth' : 'auto'
+      })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [messages.length, busy])
 
   async function loadSessions() {
     const response = await fetch('/api/chat')
@@ -209,7 +219,7 @@ export default function ChatPage() {
 
           {chatType === 'medical' ? <div className="as-emergency-strip"><AlertTriangle /><span><strong>Possible emergency?</strong> Call 112 or go to the nearest emergency department. Do not wait here.</span></div> : <div className="as-study-strip"><BookOpen /><span>Generated teaching content should be checked against your current curriculum and primary sources.</span></div>}
 
-          <div className="as-message-scroll">
+          <div className="as-message-scroll" ref={messageScrollRef}>
             {!messages.length ? (
               <div className="as-chat-empty">
                 <div className="as-chat-empty-brand"><div className="as-chat-empty-mark"><Image src="/arogya-mark.png" alt="" width={34} height={34} /></div><span><strong>Arogya</strong><small>Created by Adarsh</small></span></div>
@@ -223,10 +233,9 @@ export default function ChatPage() {
               <div className="as-message-list">
                 {messages.map(message => <article key={message.id} className={`as-message is-${message.role}`}>
                   <div className="as-message-avatar">{message.role === 'assistant' ? <Image src="/arogya-mark.png" alt="" width={20} height={20} /> : <UserRound />}</div>
-                  <div className="as-message-content"><div className="as-message-meta"><span>{message.role === 'assistant' ? <><strong>Arogya</strong><small>by Adarsh</small></> : 'You'}</span><div><button onClick={() => copyMessage(message)} aria-label="Copy this message">{copiedId === message.id ? <Check /> : <Copy />}</button>{message.role === 'assistant' && <button onClick={() => speakText(message.content, language)} aria-label="Read this answer aloud"><Volume2 /></button>}</div></div><MessageRenderer content={message.content} />{sources[message.id]?.length ? <div className="as-source-list"><span><BookOpen /> Evidence consulted</span>{sources[message.id].map(source => <a key={source.id} href={source.url} target="_blank" rel="noreferrer"><strong>{source.title}</strong><small>{source.publisher} · reviewed {source.reviewedAt}</small></a>)}</div> : null}</div>
+                  <div className="as-message-content"><div className="as-message-meta"><span>{message.role === 'assistant' ? <><strong>Arogya</strong><small>by Adarsh</small></> : 'You'}</span><div><button onClick={() => copyMessage(message)} aria-label="Copy this message">{copiedId === message.id ? <Check /> : <Copy />}</button>{message.role === 'assistant' && <button onClick={() => speakText(message.content, language)} aria-label="Read this answer aloud"><Volume2 /></button>}</div></div><MessageRenderer content={message.content} />{sources[message.id]?.length ? <div className="as-source-list"><span><BookOpen /> Evidence consulted</span>{sources[message.id].map(source => <Link key={source.id} href={`/resources/${encodeURIComponent(source.id)}`}><strong>{source.title}</strong><small>{source.publisher} · reviewed {source.reviewedAt}</small></Link>)}</div> : null}</div>
                 </article>)}
                 {busy && <article className="as-message is-assistant"><div className="as-message-avatar"><Image src="/arogya-mark.png" alt="" width={20} height={20} /></div><div className="as-thinking"><i /><i /><i /><span>Reviewing context and evidence</span></div></article>}
-                <div ref={endRef} />
               </div>
             )}
           </div>

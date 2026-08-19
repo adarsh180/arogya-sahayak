@@ -5,11 +5,12 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
-import { Activity, BookOpen, ChevronDown, LogOut, Menu, MessageSquareText, UserRound, X } from 'lucide-react'
+import { Activity, BookOpen, ChevronDown, FileSearch, LogOut, Menu, MessageSquareText, UserRound, X } from 'lucide-react'
 
 const appLinks = [
   { href: '/dashboard', label: 'Overview', icon: Activity },
   { href: '/chat', label: 'Ask Arogya', icon: MessageSquareText },
+  { href: '/resources', label: 'Evidence', icon: FileSearch },
   { href: '/student', label: 'Learn', icon: BookOpen },
   { href: '/profile', label: 'Profile', icon: UserRound },
 ]
@@ -29,7 +30,7 @@ export default function Navbar() {
 
         <nav className="as-nav-links" aria-label="Primary navigation">
           {session ? appLinks.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} className={pathname === href ? 'is-active' : ''} aria-current={pathname === href ? 'page' : undefined}>
+            <Link key={href} href={href} className={pathname === href || pathname.startsWith(`${href}/`) ? 'is-active' : ''} aria-current={pathname === href || pathname.startsWith(`${href}/`) ? 'page' : undefined}>
               <Icon aria-hidden="true" />{label}
             </Link>
           )) : (

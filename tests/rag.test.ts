@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { evidenceContext, retrieveMedicalEvidence } from '../lib/rag'
+import { evidenceContext, getMedicalSource, listMedicalSources, retrieveMedicalEvidence } from '../lib/rag'
 
 test('retrieves a relevant blood-pressure source before unrelated sources', () => {
   const results = retrieveMedicalEvidence('What does a high blood pressure reading mean?')
@@ -24,4 +24,14 @@ test('routes specialty queries to an authoritative Indian guideline index', () =
   const evidence = retrieveMedicalEvidence('paediatric dengue fever guidance')
   assert.equal(evidence.some(source => source.id === 'icmr-standard-treatment-workflows'), true)
   assert.equal(evidence.some(source => source.publisher.includes('Government of India')), true)
+})
+
+test('every retrieved citation resolves to a stable in-app resource record', () => {
+  const sources = listMedicalSources()
+  assert.ok(sources.length >= 8)
+  for (const source of sources) {
+    assert.deepEqual(getMedicalSource(source.id), source)
+    assert.match(source.url, /^https:\/\//)
+  }
+  assert.equal(getMedicalSource('missing-source'), undefined)
 })

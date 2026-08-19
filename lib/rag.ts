@@ -122,6 +122,15 @@ const sources: MedicalSource[] = [
   }
 ]
 
+export function listMedicalSources() {
+  return sources.map(source => ({ ...source }))
+}
+
+export function getMedicalSource(id: string) {
+  const source = sources.find(item => item.id === id)
+  return source ? { ...source } : undefined
+}
+
 function tokens(value: string) {
   return new Set(
     value.toLocaleLowerCase().split(/[\s,.;:!?()[\]{}"'\/\\|]+/).filter(token => token.length > 2)
