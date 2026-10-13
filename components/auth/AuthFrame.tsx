@@ -1,6 +1,7 @@
 import Image from 'next/image'
-import Link from 'next/link'
-import { Check, ShieldCheck } from 'lucide-react'
+import { Check, Siren } from 'lucide-react'
+import Brand from '@/components/shell/Brand'
+import ThemeToggle from '@/components/shell/ThemeToggle'
 
 export default function AuthFrame({ eyebrow, title, description, children }: {
   eyebrow: string
@@ -9,31 +10,29 @@ export default function AuthFrame({ eyebrow, title, description, children }: {
   children: React.ReactNode
 }) {
   return (
-    <main id="main-content" className="as-auth-page">
-      <section className="as-auth-story">
-        <Link href="/" className="as-auth-brand" aria-label="Arogya Sahayak home">
-          <Image src="/arogya-mark.png" alt="" width={46} height={46} priority />
-          <span><strong>Arogya</strong> Sahayak</span>
-        </Link>
-        <div className="as-auth-story-copy">
-          <span>Designed around a simple promise</span>
+    <div className="auth">
+      <aside className="auth-story">
+        <Brand />
+        <div className="auth-story-body">
+          <Image src="/arogya-mark.png" alt="" width={72} height={72} className="auth-story-mark" />
           <blockquote>“Good health technology should make the next step feel understandable.”</blockquote>
           <ul>
-            <li><Check /> Clear medical boundaries</li>
-            <li><Check /> Evidence provenance when available</li>
-            <li><Check /> Patient and learner workspaces</li>
+            <li><Check /> Clear medical boundaries, every time</li>
+            <li><Check /> Sources shown when answers rely on them</li>
+            <li><Check /> Personal health and learning in one place</li>
           </ul>
         </div>
-        <div className="as-auth-safety"><ShieldCheck /><span><strong>Emergency?</strong> Call India’s 112 service. Do not wait for an AI response.</span></div>
-      </section>
-      <section className="as-auth-panel">
-        <div className="as-auth-card">
-          <span className="as-kicker">{eyebrow}</span>
+        <div className="auth-emergency"><Siren /><span><strong>In an emergency, call 112.</strong> Don’t wait for an AI response.</span></div>
+      </aside>
+      <main id="main-content" className="auth-panel">
+        <div className="auth-panel-top"><span className="auth-mobile-brand"><Brand tagline={null} /></span><ThemeToggle /></div>
+        <div className="auth-card">
+          <span className="ui-kicker">{eyebrow}</span>
           <h1>{title}</h1>
           <p>{description}</p>
           {children}
         </div>
-      </section>
-    </main>
+      </main>
+    </div>
   )
 }

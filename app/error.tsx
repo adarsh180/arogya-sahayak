@@ -1,8 +1,24 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { AlertCircle, RotateCcw } from 'lucide-react'
 
-export default function ErrorPage({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
-  return <main id="main-content" className="as-error-page"><AlertCircle /><span className="as-kicker">Something interrupted this page</span><h1>Your information is still yours.</h1><p>Try the page again. If the problem continues, return to your overview and avoid repeating a sensitive upload.</p><div><button className="as-button" onClick={reset}><RotateCcw /> Try again</button><Link className="as-button as-button-quiet" href="/dashboard">Return to overview</Link></div></main>
+export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  useEffect(() => { console.error(error) }, [error])
+
+  return (
+    <main id="main-content" className="err-page">
+      <div>
+        <span className="ui-empty-icon"><AlertCircle /></span>
+        <span className="ui-kicker is-plain">Something interrupted this page</span>
+        <h1>Your information is safe.</h1>
+        <p>Try loading the page again. If it keeps happening, go back to your overview{error.digest ? ` and mention reference ${error.digest} when you contact us` : ''}.</p>
+        <div className="home-hero-actions">
+          <button type="button" className="ui-btn" onClick={reset}><RotateCcw /> Try again</button>
+          <Link className="ui-btn ui-btn-secondary" href="/dashboard">Go to overview</Link>
+        </div>
+      </div>
+    </main>
+  )
 }

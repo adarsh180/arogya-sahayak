@@ -51,7 +51,7 @@ export default function VoiceComposer({ language, disabled, onTranscript }: {
   return (
     <button
       type="button"
-      className={`as-voice-button ${listening ? 'is-listening' : ''}`}
+      className={`ui-icon-btn chat-voice ${listening ? "is-listening" : ""}`}
       onClick={toggle}
       disabled={disabled || !supported}
       aria-label={!supported ? 'Voice input is not supported by this browser' : listening ? 'Stop listening' : 'Speak your message'}

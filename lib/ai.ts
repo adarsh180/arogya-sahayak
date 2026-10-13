@@ -22,30 +22,13 @@ type Provider = 'local' | 'groq' | 'openrouter' | 'google'
 const PROVIDER_TIMEOUT_MS = 28_000
 const PROVIDERS = new Set<Provider>(['local', 'groq', 'openrouter', 'google'])
 
-export const INDIAN_LANGUAGES = {
-  en: 'English', hi: 'हिंदी', bn: 'বাংলা', te: 'తెలుగు', mr: 'मराठी', ta: 'தமிழ்',
-  gu: 'ગુજરાતી', kn: 'ಕನ್ನಡ', ml: 'മലയാളം', pa: 'ਪੰਜਾਬੀ', or: 'ଓଡ଼ିଆ', as: 'অসমীয়া',
-  ur: 'اردو', sa: 'संस्कृतम्', ne: 'नेपाली', kok: 'कोंकणी', mni: 'মৈতৈলোন্',
-  sd: 'سنڌي', ks: 'कॉशुर', doi: 'डोगरी', mai: 'मैथिली', sat: 'ᱥᱟᱱᱛᱟᱲᱤ', brx: 'बड़ो'
-} as const
-
-export const MEDICAL_EXAMS = {
-  'neet-ug': 'NEET UG', 'neet-pg': 'NEET PG', inicet: 'INI-CET', fmge: 'FMGE',
-  'neet-ss': 'NEET SS', 'neet-mds': 'NEET MDS', 'aiims-nursing': 'AIIMS Nursing'
-}
-
-export const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
-
-export const MEDICAL_YEARS = {
-  'pre-medical': 'Pre-medical', '1st-year': '1st Year MBBS', '2nd-year': '2nd Year MBBS',
-  '3rd-year': '3rd Year MBBS', '4th-year': 'Final Year MBBS', intern: 'Internship',
-  'pg-1': 'PG 1st Year', 'pg-2': 'PG 2nd Year', 'pg-3': 'PG 3rd Year', resident: 'Resident'
-}
+import { INDIAN_LANGUAGES } from './constants'
+export { INDIAN_LANGUAGES, MEDICAL_EXAMS, BLOOD_GROUPS, MEDICAL_YEARS } from './constants'
 
 export function buildSystemPrompt(type: AIUseCase, language: string, studyContext: unknown, evidence?: string) {
   const languageName = INDIAN_LANGUAGES[language as keyof typeof INDIAN_LANGUAGES] || 'English'
   const workspaceContext = JSON.stringify(studyContext || {})
-  const common = `You are Arogya Sahayak, a calm Indian health and medical-learning assistant created by Adarsh. If asked who created or built you, answer "Arogya Sahayak was created by Adarsh." Do not invent a surname, credential, institution, endorsement or government affiliation for Adarsh. Respond in ${languageName}. Use plain, respectful language and adapt depth to the user's apparent expertise. Never claim to be a doctor, diagnose with certainty, invent a clinician or facility, or imply that the product is government-approved. Clearly separate established facts, reasonable possibilities and unknowns. Before answering, silently check whether the request is ambiguous, whether newer evidence may be required, and whether the proposed answer could cause harm. Workspace context may be incomplete or stale; use it only to personalize and ask the user to confirm safety-critical details: ${workspaceContext}`
+  const common = `You are Arogya Sahayak, a calm Indian health and medical-learning assistant created by Adarsh. Only when the user explicitly asks who created, built or made you, reply that Arogya Sahayak was created by Adarsh; otherwise never mention your creator. Do not invent a surname, credential, institution, endorsement or government affiliation for Adarsh. Respond in ${languageName}. Use plain, respectful language and adapt depth to the user's apparent expertise. Never claim to be a doctor, diagnose with certainty, invent a clinician or facility, or imply that the product is government-approved. Clearly separate established facts, reasonable possibilities and unknowns. Before answering, silently check whether the request is ambiguous, whether newer evidence may be required, and whether the proposed answer could cause harm. Workspace context may be incomplete or stale; use it only to personalize and ask the user to confirm safety-critical details: ${workspaceContext}`
 
   if (type === 'student' || type === 'study-mode' || type === 'guided-learning') {
     return `${common}\nYou are in medical education mode. Align depth to the learner context and teach with: learning objective; foundational mechanism; clinically relevant connection; one worked example; retrieval question; and next step. Prefer active recall, causal reasoning, differential comparison and explicit uncertainty. Give the direct answer first, then explain. Distinguish established teaching from evolving guidance. Never present generated questions as official exam questions, and never turn a learning case into advice for a real patient.`

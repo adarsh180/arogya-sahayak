@@ -1,10 +1,17 @@
 import './globals.css'
-import './micro-interactions.css'
-import { Inter } from 'next/font/google'
+import './styles/ui.css'
+import './styles/shell.css'
+import './styles/pages.css'
+import './styles/chat.css'
+import './styles/care.css'
+import './styles/learn.css'
+import './styles/public.css'
+import './styles/content.css'
+import type { Metadata, Viewport } from 'next'
+import { Fraunces, Inter } from 'next/font/google'
 import { Providers } from './providers'
 import { Toaster } from 'react-hot-toast'
 import RouteLoader from '@/components/RouteLoader'
-import ThemeSwitcher from '@/components/ThemeSwitcher'
 
 const themeScript = `
   (() => {
@@ -19,13 +26,10 @@ const themeScript = `
   })();
 `
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-sans',
-  display: 'swap',
-})
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
+const fraunces = Fraunces({ subsets: ['latin'], variable: '--font-fraunces', display: 'swap', axes: ['SOFT', 'opsz'] })
 
-export const metadata = {
+export const metadata: Metadata = {
   title: {
     default: 'Arogya Sahayak — Health clarity, in your language',
     template: '%s · Arogya Sahayak',
@@ -35,31 +39,26 @@ export const metadata = {
   icons: { icon: '/arogya-mark.png', apple: '/arogya-mark.png' },
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f5f1e8' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a1311' },
+  ],
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${fraunces.variable}`} suppressHydrationWarning>
       <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
-      <body className="font-sans antialiased">
+      <body>
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <Providers>
           <RouteLoader />
           {children}
-          <ThemeSwitcher />
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              className: 'as-toast',
-              style: {
-                background: '#173c34',
-                color: '#fffdf7',
-                border: '1px solid rgba(255,255,255,0.12)',
-              },
-            }}
-          />
+          <Toaster position="top-center" toastOptions={{ className: 'ui-toast', duration: 4200 }} />
         </Providers>
       </body>
     </html>

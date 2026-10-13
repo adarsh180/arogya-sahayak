@@ -1,87 +1,97 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import {
-  Activity, AlertCircle, ArrowRight, BookOpenCheck, Check, FileSearch,
-  Languages, LockKeyhole, MessageSquareText, Mic, Pill, ShieldCheck, Stethoscope
+  Activity, ArrowRight, BookOpenCheck, Check, FileSearch, HeartPulse, Languages, LockKeyhole,
+  MessageSquareText, Mic, Pill, ShieldCheck, Siren, Sparkles
 } from 'lucide-react'
-import Navbar from '@/components/Navbar'
-import AnimatedHealthTrend from '@/components/AnimatedHealthTrend'
+import { SiteFooter, SiteHeader } from '@/components/shell/SiteChrome'
 
 const capabilities = [
-  { icon: MessageSquareText, title: 'Ask with context', copy: 'Have a calm, structured health conversation that remembers the current thread and asks for missing context.' },
-  { icon: FileSearch, title: 'See the evidence', copy: 'Relevant curated sources are retrieved before a health answer, with provenance shown separately from generated text.' },
-  { icon: Activity, title: 'Understand trends', copy: 'Record measurements and view deterministic, clearly bounded summaries instead of AI-made diagnoses.' },
-  { icon: Pill, title: 'Organise treatment', copy: 'Keep medication schedules, appointments, vaccinations and health records together for easier follow-through.' },
-  { icon: Mic, title: 'Speak naturally', copy: 'Use device speech where the browser supports it, with an optional local endpoint for private experimentation.' },
-  { icon: BookOpenCheck, title: 'Learn actively', copy: 'Study medicine through recall, cases and adaptive explanations—clearly labelled as generated practice material.' },
+  { icon: MessageSquareText, title: 'Ask with context', copy: 'A calm conversation that asks for what matters, remembers the thread and answers in your language.' },
+  { icon: FileSearch, title: 'See the evidence', copy: 'Reviewed sources are retrieved before a health answer and shown separately from generated text.' },
+  { icon: Activity, title: 'Understand your numbers', copy: 'Record BP, glucose, pulse and BMI. See trends against usual ranges — never an AI diagnosis.' },
+  { icon: Pill, title: 'Stay on schedule', copy: 'Medicine reminders, a daily check-off and plain-language notes about what you take.' },
+  { icon: Mic, title: 'Speak naturally', copy: 'Talk instead of typing where your browser supports it, and have answers read aloud.' },
+  { icon: BookOpenCheck, title: 'Learn medicine actively', copy: 'Guided study, timed mock tests with explanations, study plans and honest progress tracking.' },
+]
+
+const steps = [
+  { title: 'Urgency screen', copy: 'Emergency language is caught first and routed to 112 before any AI is called.' },
+  { title: 'Reviewed sources', copy: 'A small, curated evidence library is searched and cited with every relevant answer.' },
+  { title: 'Bounded answers', copy: 'The model works under strict medical boundaries: no prescribing, no dosing, no diagnosis.' },
+  { title: 'A human next step', copy: 'Every answer keeps the route to a qualified clinician clear and visible.' },
 ]
 
 export default function Home() {
   return (
-    <div className="as-site">
-      <Navbar />
-      <main id="main-content">
-        <section className="as-hero">
-          <div className="as-hero-grid" aria-hidden="true" />
-          <div className="as-container as-hero-layout">
-            <div className="as-hero-copy">
-              <div className="as-eyebrow"><span />Designed for health clarity in India</div>
-              <h1>Health information should leave you <em>clearer,</em> not more anxious.</h1>
-              <p className="as-hero-lede">
-                Arogya Sahayak brings evidence-aware guidance, everyday health organisation and medical learning into one considered workspace—across languages and devices.
-              </p>
-              <div className="as-hero-actions">
-                <Link href="/auth/signup" className="as-button">Create your space <ArrowRight aria-hidden="true" /></Link>
-                <Link href="#safety" className="as-button as-button-quiet">How safety works</Link>
+    <>
+      <SiteHeader />
+      <main id="main-content" className="home">
+        <section className="home-hero">
+          <div className="home-hero-glow" aria-hidden="true" />
+          <div className="home-wrap home-hero-grid">
+            <div className="home-hero-copy">
+              <span className="ui-kicker">Health clarity, designed for India</span>
+              <h1>Health information that leaves you <em>clearer</em>, not more anxious.</h1>
+              <p>Arogya Sahayak brings evidence-aware answers, everyday health organisation and medical learning into one calm workspace — in your language, on any device.</p>
+              <div className="home-hero-actions">
+                <Link href="/auth/signup" className="ui-btn ui-btn-lg">Create your free space <ArrowRight /></Link>
+                <Link href="/#safety" className="ui-btn ui-btn-lg ui-btn-secondary">How safety works</Link>
               </div>
-              <div className="as-hero-note">
-                <ShieldCheck aria-hidden="true" />
-                <span><strong>Not a diagnosis.</strong> Urgent concerns are routed to emergency guidance before an AI provider is called.</span>
-              </div>
+              <ul className="home-hero-points">
+                <li><Check /> 12 Indian languages</li>
+                <li><Check /> Sources shown</li>
+                <li><Check /> No diagnosis, ever</li>
+              </ul>
             </div>
 
-            <div className="as-product-frame" aria-label="Preview of the Arogya workspace">
-              <div className="as-product-topbar">
-                <div className="as-product-identity"><span className="as-status-dot" /> Personal health space</div>
-                <span>Today</span>
+            <div className="home-preview" aria-label="Preview of the Arogya workspace">
+              <div className="home-preview-card is-main">
+                <header><span className="home-dot" /> Personal health space <small>Today</small></header>
+                <h3>Good morning, Meera</h3>
+                <div className="home-preview-vitals">
+                  <div><small>Blood pressure</small><strong>128/82</strong><span className="ui-badge is-ok">Within range</span></div>
+                  <div><small>Fasting glucose</small><strong>104</strong><span className="ui-badge is-warn">Above range</span></div>
+                </div>
+                <svg className="home-preview-trend" viewBox="0 0 300 70" aria-hidden="true">
+                  <rect x="0" y="22" width="300" height="26" rx="4" />
+                  <path d="M6 52 C40 50 52 38 84 40 S128 30 156 34 S206 22 236 28 S280 18 294 20" />
+                  {[[6, 52], [84, 40], [156, 34], [236, 28], [294, 20]].map(([cx, cy]) => <circle key={cx} cx={cx} cy={cy} r="4" />)}
+                </svg>
+                <div className="home-preview-dose"><Pill /><span><small>Next dose · 20:00</small><strong>Metformin 500 · 1 tablet</strong></span></div>
               </div>
-              <div className="as-product-body">
-                <div className="as-product-greeting">
-                  <span>Good morning</span>
-                  <h2>What would help you feel prepared today?</h2>
+              <div className="home-preview-card is-chat">
+                <div className="home-bubble is-user">Is a fasting sugar of 104 something to worry about?</div>
+                <div className="home-bubble is-bot">
+                  <Image src="/arogya-mark.png" alt="" width={18} height={18} />
+                  <span>It’s slightly above the usual fasting range. One reading can’t diagnose anything — let’s look at when it was taken and what else you’ve noticed…</span>
                 </div>
-                <div className="as-quick-grid">
-                  <article><MessageSquareText /><strong>Ask a health question</strong><span>Private thread · sources shown</span></article>
-                  <article><Activity /><strong>Record a measurement</strong><span>Blood pressure, glucose, BMI</span></article>
-                </div>
-                <div className="as-insight-card">
-                  <div className="as-insight-label"><span>Weekly view</span><span>3 entries</span></div>
-                  <AnimatedHealthTrend />
-                  <p>Your records stay organised. A single measurement is never presented as a diagnosis.</p>
-                </div>
-                <div className="as-next-row"><span><Stethoscope /> Prepare for a clinician visit</span><ArrowRight /></div>
+                <div className="home-source"><FileSearch /> WHO · Diabetes fact sheet</div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="as-principles" aria-label="Product principles">
-          <div className="as-container as-principle-grid">
-            <div><LockKeyhole /><span><strong>Data minimisation</strong>Collect only what a feature needs</span></div>
-            <div><FileSearch /><span><strong>Source separation</strong>Evidence stays visible and attributable</span></div>
-            <div><Languages /><span><strong>Language access</strong>Designed for multilingual conversations</span></div>
+        <section className="home-principles" aria-label="Principles">
+          <div className="home-wrap">
+            <div><LockKeyhole /><span><strong>Data minimisation</strong>Only what a feature needs</span></div>
+            <div><FileSearch /><span><strong>Source separation</strong>Evidence stays attributable</span></div>
+            <div><Languages /><span><strong>Language access</strong>Hindi, Tamil, Bengali and more</span></div>
+            <div><Siren /><span><strong>Emergency-aware</strong>112 is always one tap away</span></div>
           </div>
         </section>
 
-        <section id="capabilities" className="as-section as-container">
-          <div className="as-section-heading">
-            <div><span className="as-kicker">One considered system</span><h2>Less switching. More continuity.</h2></div>
-            <p>Each tool has a clear job, a visible safety boundary and a common interaction language.</p>
+        <section id="capabilities" className="home-section home-wrap">
+          <div className="home-section-head">
+            <span className="ui-kicker">One considered system</span>
+            <h2>Less switching. More continuity.</h2>
+            <p>Each tool has one clear job, a visible safety boundary and the same calm interaction language.</p>
           </div>
-          <div className="as-capability-grid">
+          <div className="home-caps">
             {capabilities.map(({ icon: Icon, title, copy }, index) => (
-              <article key={title} className="as-capability-card" style={{ '--delay': `${index * 60}ms` } as React.CSSProperties}>
-                <span className="as-capability-number">0{index + 1}</span>
-                <Icon aria-hidden="true" />
+              <article key={title} className="ui-card home-cap">
+                <span className="home-cap-num">0{index + 1}</span>
+                <span className="ui-row-icon"><Icon /></span>
                 <h3>{title}</h3>
                 <p>{copy}</p>
               </article>
@@ -89,58 +99,56 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="safety" className="as-safety-section">
-          <div className="as-container as-safety-layout">
-            <div className="as-safety-copy">
-              <span className="as-kicker">A safer answer architecture</span>
+        <section id="safety" className="home-safety">
+          <div className="home-wrap home-safety-grid">
+            <div className="home-safety-copy">
+              <span className="ui-kicker">A safer answer architecture</span>
               <h2>Confidence is earned in layers.</h2>
-              <p>Health AI should show where information came from, admit when its evidence is thin and make escalation unmistakable.</p>
-              <Link href="/auth/signup" className="as-inline-link">Explore the protected workspace <ArrowRight /></Link>
+              <p>Health AI should show where information came from, admit when evidence is thin and make escalation unmistakable.</p>
+              <Link href="/resources" className="ui-btn ui-btn-light">Browse the evidence library <ArrowRight /></Link>
             </div>
-            <ol className="as-safety-steps">
-              <li><span>01</span><div><strong>Urgency screen</strong><p>Potential emergency language is intercepted first and directed to India’s 112 service.</p></div><Check /></li>
-              <li><span>02</span><div><strong>Relevant source retrieval</strong><p>A small, reviewed knowledge layer is searched locally—without a vector database.</p></div><Check /></li>
-              <li><span>03</span><div><strong>Bounded generation</strong><p>The selected provider receives strict medical boundaries, source context and a low-variance setting.</p></div><Check /></li>
-              <li><span>04</span><div><strong>Human next step</strong><p>The interface distinguishes education from diagnosis and preserves the route to professional care.</p></div><Check /></li>
+            <ol className="home-steps">
+              {steps.map((step, index) => (
+                <li key={step.title}><span>0{index + 1}</span><div><strong>{step.title}</strong><p>{step.copy}</p></div><ShieldCheck /></li>
+              ))}
             </ol>
           </div>
         </section>
 
-        <section id="students" className="as-section as-container">
-          <div className="as-student-panel">
+        <section id="students" className="home-section home-wrap">
+          <div className="home-students ui-card">
             <div>
-              <span className="as-kicker">For medical learners</span>
+              <span className="ui-kicker">For medical learners</span>
               <h2>A tutor that makes you retrieve, reason and reflect.</h2>
-              <p>Build active-recall sessions, case reasoning and practice questions adapted to your topic. Generated material is labelled and never passed off as official exam content.</p>
-              <div className="as-check-list"><span><Check /> Socratic guidance</span><span><Check /> Case-based practice</span><span><Check /> Progress reflection</span></div>
-              <Link href="/auth/signup" className="as-button as-button-light">Start learning <ArrowRight /></Link>
+              <p>Guided sessions built on active recall and clinical cases, timed MCQs for NEET UG, NEET PG, INI-CET, FMGE and more — with an explanation for every answer.</p>
+              <ul>
+                <li><Check /> Socratic, case-based guidance</li>
+                <li><Check /> Mock tests with full answer review</li>
+                <li><Check /> AI-drafted study plans you control</li>
+              </ul>
+              <Link href="/auth/signup" className="ui-btn">Start learning <ArrowRight /></Link>
             </div>
-            <div className="as-study-stack" aria-label="Sample study cards">
-              <article><span>Learning objective</span><strong>Connect preload to stroke volume</strong><p>Explain the relationship in your own words before revealing the model.</p></article>
-              <article><span>Clinical reasoning</span><strong>What changes first?</strong><p>A patient develops acute blood loss. Predict the early compensatory response.</p></article>
-              <article><span>Reflection</span><strong>One-minute recall</strong><p>Write the three variables that determine cardiac output.</p></article>
+            <div className="home-study-stack" aria-hidden="true">
+              <article><small>Learning objective</small><strong>Connect preload to stroke volume</strong><p>Explain it in your own words before revealing the model.</p></article>
+              <article><small>Clinical reasoning</small><strong>What changes first?</strong><p>Acute blood loss — predict the earliest compensatory response.</p></article>
+              <article><small>Mock test · Physiology</small><strong>Score 84%</strong><p>21 of 25 correct · review 4 explanations</p></article>
             </div>
           </div>
         </section>
 
-        <section className="as-final-cta">
-          <div className="as-container">
-            <AlertCircle aria-hidden="true" />
-            <h2>Built to assist judgment,<br />never replace it.</h2>
-            <p>Begin with a workspace that makes its limits as visible as its capabilities.</p>
-            <Link href="/auth/signup" className="as-button">Create your account <ArrowRight /></Link>
+        <section className="home-cta">
+          <div className="home-wrap">
+            <Image src="/arogya-mark.png" alt="" width={56} height={56} />
+            <h2>Built to support judgment — never to replace it.</h2>
+            <p>Start with a workspace that is as clear about its limits as it is about what it can do.</p>
+            <div className="home-hero-actions">
+              <Link href="/auth/signup" className="ui-btn ui-btn-lg">Create your account <Sparkles /></Link>
+              <Link href="/emergency" className="ui-btn ui-btn-lg ui-btn-secondary"><HeartPulse /> Emergency numbers</Link>
+            </div>
           </div>
         </section>
       </main>
-
-      <footer className="as-footer">
-        <div className="as-container as-footer-grid">
-          <div><strong>Arogya Sahayak</strong><p>Health information and learning support for India.</p></div>
-          <div><span>Medical boundary</span><p>Educational support only. For emergencies in India, call 112.</p></div>
-          <div><span>Product</span><Link href="/auth/signin">Sign in</Link><Link href="/#safety">Safety architecture</Link></div>
-          <small>© {new Date().getFullYear()} Arogya Sahayak</small>
-        </div>
-      </footer>
-    </div>
+      <SiteFooter />
+    </>
   )
 }

@@ -1,5 +1,20 @@
-import Navbar from '@/components/Navbar'
+'use client'
+
+import DocPage from '@/components/DocPage'
 
 export default function TermsPage() {
-  return <div className="as-policy-page"><Navbar /><main id="main-content" className="as-policy as-container"><header><span className="as-kicker">Terms of use · 19 August 2026</span><h1>Use Arogya as support, not authority.</h1><p>These product-level terms are a transparent starting point, not a substitute for deployment-specific legal terms.</p></header><div className="as-policy-layout"><aside><a href="#scope">Scope</a><a href="#medical">Medical boundary</a><a href="#learning">Learning content</a><a href="#acceptable">Acceptable use</a><a href="#availability">Availability</a></aside><article><section id="scope"><span>01</span><h2>Scope</h2><p>Arogya Sahayak provides health information, personal organisation and medical-learning tools. Features and providers may change as the product is evaluated and improved.</p></section><section id="medical"><span>02</span><h2>Medical boundary</h2><p>Do not use this product to diagnose, prescribe, change treatment or delay professional care. For an emergency in India call 112. Always use a qualified clinician for decisions about symptoms, medicines, pregnancy, children, serious conditions or urgent changes.</p></section><section id="learning"><span>03</span><h2>Learning content</h2><p>Questions and explanations may be AI-generated and are not official past papers. Verify disputed facts against current primary sources, textbooks, clinical guidelines and the relevant official syllabus.</p></section><section id="acceptable"><span>04</span><h2>Acceptable use</h2><p>Do not attempt to access another person’s records, submit content you have no right to process, misuse emergency information, or represent generated material as professional medical advice.</p></section><section id="availability"><span>05</span><h2>Availability and errors</h2><p>AI providers, browser speech and connected services can be unavailable or wrong. The interface should report these limits rather than substitute fabricated answers, contacts, questions or locations.</p></section></article></div></main></div>
+  return (
+    <DocPage
+      kicker="Terms of use · updated 13 October 2026"
+      title="Use Arogya as support, not authority."
+      description="These product-level terms are a transparent starting point, not a substitute for deployment-specific legal terms."
+      sections={[
+        { id: 'scope', title: 'Scope', body: <p>Arogya Sahayak provides health information, personal organisation and medical-learning tools. Features and providers may change as the product is evaluated and improved.</p> },
+        { id: 'medical', title: 'Medical boundary', body: <p>Do not use this product to diagnose, prescribe, change treatment or delay professional care. For an emergency in India call 112. Always involve a qualified clinician in decisions about symptoms, medicines, pregnancy, children, serious conditions or urgent changes.</p> },
+        { id: 'learning', title: 'Learning content', body: <p>Questions and explanations may be AI-generated and are not official past papers. Verify disputed facts against current primary sources, textbooks, clinical guidelines and the relevant official syllabus.</p> },
+        { id: 'use', title: 'Acceptable use', body: <p>Do not attempt to access another person’s records, submit content you have no right to process, misuse emergency information, or present generated material as professional medical advice.</p> },
+        { id: 'availability', title: 'Availability and errors', body: <p>AI providers, browser speech and connected services can be unavailable or wrong. The interface reports these limits rather than substituting fabricated answers, contacts, questions or locations.</p> },
+      ]}
+    />
+  )
 }

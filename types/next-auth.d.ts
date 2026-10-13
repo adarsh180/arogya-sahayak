@@ -14,6 +14,7 @@ declare module "next-auth" {
       preferredLanguage?: string | null
       userType?: string | null
       onboardingCompleted?: boolean
+      targetExam?: string | null
     }
   }
 

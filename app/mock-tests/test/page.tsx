@@ -1,434 +1,253 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { useSession } from 'next-auth/react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Clock, CheckCircle, AlertCircle, ArrowRight, ArrowLeft, Flag } from 'lucide-react'
-import Navbar from '@/components/Navbar'
 import toast from 'react-hot-toast'
+import {
+  AlertTriangle, ArrowLeft, ArrowRight, Check, CheckCircle2, ClipboardCheck, Flag, Play, RotateCcw, Timer, X, XCircle
+} from 'lucide-react'
+import AppShell from '@/components/shell/AppShell'
+import { BrandLoader, EmptyState, Modal, Spinner, cx } from '@/components/ui/kit'
+import { api, errorMessage } from '@/lib/client-api'
+import { MEDICAL_EXAMS } from '@/lib/constants'
 
-interface Question {
-  id: string
-  question: string
-  options: string[]
-  correctAnswer: number
-  explanation: string
-  difficulty: 'easy' | 'medium' | 'hard'
+type Question = { question: string; options: string[]; correct: number; explanation: string }
+type Result = { score: number; correctAnswers: number; attempted: number; totalQuestions: number; timeSpentSeconds: number; band: string; review: Array<{ selected: number | null; correct: number; isCorrect: boolean }> }
+type Phase = 'loading' | 'error' | 'ready' | 'running' | 'submitting' | 'done'
+
+const letters = ['A', 'B', 'C', 'D']
+const clock = (seconds: number) => `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
+
+export default function MockTestPage() {
+  return <AppShell loadingLabel="Opening your test"><Suspense fallback={null}><Runner /></Suspense></AppShell>
 }
 
-export default function MockTest() {
-  const { data: session, status } = useSession()
+function Runner() {
   const router = useRouter()
-  const searchParams = useSearchParams()
+  const params = useSearchParams()
+  const exam = params.get('exam') || ''
+  const subject = params.get('subject') || ''
+  const count = Math.min(25, Math.max(3, Number(params.get('questions')) || 10))
+  const minutes = Math.min(90, Math.max(5, Number(params.get('duration')) || 15))
+  const examName = MEDICAL_EXAMS[exam as keyof typeof MEDICAL_EXAMS] || exam.toUpperCase()
+
+  const [phase, setPhase] = useState<Phase>('loading')
+  const [error, setError] = useState('')
   const [questions, setQuestions] = useState<Question[]>([])
-  const [currentQuestion, setCurrentQuestion] = useState(0)
-  const [answers, setAnswers] = useState<{ [key: number]: number }>({})
-  const [timeLeft, setTimeLeft] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [testStarted, setTestStarted] = useState(false)
-  const [showResults, setShowResults] = useState(false)
-  const [testResults, setTestResults] = useState<any>(null)
-  const timerRef = useRef<NodeJS.Timeout>()
+  const [current, setCurrent] = useState(0)
+  const [answers, setAnswers] = useState<Record<number, number>>({})
+  const [flags, setFlags] = useState<Set<number>>(new Set())
+  const [left, setLeft] = useState(minutes * 60)
+  const [confirm, setConfirm] = useState(false)
+  const [result, setResult] = useState<Result | null>(null)
+  const startedAt = useRef(0)
+  const requested = useRef(false)
 
-  const exam = searchParams.get('exam')
-  const subject = searchParams.get('subject')
-  const mode = searchParams.get('mode')
-  const questionCount = parseInt(searchParams.get('questions') || '10')
-  const duration = parseInt(searchParams.get('duration') || '15')
+  const generate = useCallback(async () => {
+    setPhase('loading')
+    setError('')
+    try {
+      const data = await api<{ questions: Question[] }>('/api/mock-tests/generate', { method: 'POST', json: { exam: examName, subject, questionCount: count } })
+      setQuestions(data.questions)
+      setAnswers({})
+      setFlags(new Set())
+      setCurrent(0)
+      setLeft(minutes * 60)
+      setPhase('ready')
+    } catch (reason) {
+      setError(errorMessage(reason, 'Questions could not be generated right now.'))
+      setPhase('error')
+    }
+  }, [count, examName, minutes, subject])
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/signin')
-    } else if (session && exam && subject) {
-      generateQuestions()
+    if (!exam || !subject) { router.replace('/mock-tests'); return }
+    if (requested.current) return
+    requested.current = true
+    generate()
+  }, [exam, generate, router, subject])
+
+  const submit = useCallback(async () => {
+    setConfirm(false)
+    setPhase('submitting')
+    try {
+      const timeSpentSeconds = Math.round((Date.now() - startedAt.current) / 1000)
+      const data = await api<Result>('/api/mock-tests/submit', { method: 'POST', json: { exam, subject, questions, answers, timeSpentSeconds } })
+      setResult(data)
+      setPhase('done')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (reason) {
+      toast.error(errorMessage(reason, 'Your answers could not be submitted.'))
+      setPhase('running')
     }
-  }, [status, session, exam, subject])
+  }, [answers, exam, questions, subject])
 
   useEffect(() => {
-    if (testStarted && timeLeft > 0) {
-      timerRef.current = setTimeout(() => {
-        setTimeLeft(timeLeft - 1)
-      }, 1000)
-    } else if (testStarted && timeLeft === 0) {
-      handleSubmitTest()
+    if (phase !== 'running') return
+    const timer = window.setInterval(() => setLeft(value => Math.max(0, value - 1)), 1000)
+    return () => window.clearInterval(timer)
+  }, [phase])
+
+  useEffect(() => {
+    if (phase === 'running' && left === 0) {
+      toast('Time is up — submitting your answers.', { icon: '⏱️' })
+      submit()
     }
+  }, [left, phase, submit])
 
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current)
-      }
+  useEffect(() => {
+    if (phase !== 'running') return
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault()
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [phase])
+
+  useEffect(() => {
+    if (phase !== 'running') return
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.target as HTMLElement).closest('input, textarea, select')) return
+      const index = ['1', '2', '3', '4', 'a', 'b', 'c', 'd'].indexOf(event.key.toLowerCase())
+      if (index >= 0) setAnswers(items => ({ ...items, [current]: index % 4 }))
+      if (event.key === 'ArrowRight') setCurrent(value => Math.min(questions.length - 1, value + 1))
+      if (event.key === 'ArrowLeft') setCurrent(value => Math.max(0, value - 1))
     }
-  }, [testStarted, timeLeft])
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [current, phase, questions.length])
 
-  const generateQuestions = async () => {
-    setIsLoading(true)
-    try {
-      const response = await fetch('/api/mock-tests/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          exam,
-          subject,
-          questionCount,
-          difficulty: 'mixed'
-        })
-      })
+  if (phase === 'loading') return <BrandLoader label={`Writing ${count} ${subject} questions…`} />
 
-      if (response.ok) {
-        const data = await response.json()
-        setQuestions(data.questions)
-        setTimeLeft(duration * 60)
-      } else {
-        toast.error('Failed to generate questions')
-        router.push('/mock-tests')
-      }
-    } catch (error) {
-      toast.error('Network error')
-      router.push('/mock-tests')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const startTest = () => {
-    setTestStarted(true)
-  }
-
-  const handleAnswerSelect = (questionIndex: number, answerIndex: number) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionIndex]: answerIndex
-    }))
-  }
-
-  const handleSubmitTest = async () => {
-    setIsSubmitting(true)
-    
-    try {
-      const response = await fetch('/api/mock-tests/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          exam,
-          subject,
-          questions,
-          answers,
-          timeSpent: (duration * 60) - timeLeft,
-          mode
-        })
-      })
-
-      if (response.ok) {
-        const results = await response.json()
-        setTestResults(results)
-        setShowResults(true)
-      } else {
-        toast.error('Failed to submit test')
-      }
-    } catch (error) {
-      toast.error('Network error')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
-
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600 dark:text-green-400'
-    if (score >= 60) return 'text-yellow-600 dark:text-yellow-400'
-    return 'text-red-600 dark:text-red-400'
-  }
-
-  if (isLoading) {
+  if (phase === 'error') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-medical-50 dark:from-dark-900 dark:via-dark-800 dark:to-dark-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-xl text-gray-600 dark:text-gray-300">Generating AI questions...</p>
+      <div className="ui-card mt-run-error">
+        <EmptyState icon={AlertTriangle} title="We couldn’t prepare this test" action={<div className="flex flex-wrap justify-center gap-2"><button type="button" className="ui-btn" onClick={generate}><RotateCcw /> Try again</button><Link href="/mock-tests" className="ui-btn ui-btn-secondary">Choose another test</Link></div>}>
+          {error} No placeholder questions were substituted.
+        </EmptyState>
+      </div>
+    )
+  }
+
+  if (phase === 'ready') {
+    return (
+      <section className="ui-card mt-intro ui-rise">
+        <span className="ui-kicker">{examName}</span>
+        <h1>{subject}</h1>
+        <div className="mt-intro-facts">
+          <span><ClipboardCheck /> {questions.length} questions</span>
+          <span><Timer /> {minutes} minutes</span>
+          <span><Flag /> Flag questions to revisit</span>
+        </div>
+        <ul>
+          <li>Pick one answer per question. Keys <kbd>1</kbd>–<kbd>4</kbd> select options; arrow keys move between questions.</li>
+          <li>The test submits automatically when time runs out.</li>
+          <li>You’ll see the correct answer and an explanation for every question at the end.</li>
+        </ul>
+        <div className="mt-intro-actions">
+          <Link href="/mock-tests" className="ui-btn ui-btn-secondary"><ArrowLeft /> Back</Link>
+          <button type="button" className="ui-btn ui-btn-lg" onClick={() => { startedAt.current = Date.now(); setPhase('running') }}><Play /> Begin test</button>
+        </div>
+      </section>
+    )
+  }
+
+  if (phase === 'done' && result) {
+    const tone = result.score >= 70 ? 'is-good' : result.score >= 50 ? 'is-mid' : 'is-low'
+    return (
+      <div className="mt-results">
+        <section className="ui-card mt-score ui-rise">
+          <div className={cx('mt-score-ring', tone)} style={{ '--p': result.score } as React.CSSProperties}><strong className="ui-num">{result.score}<small>%</small></strong></div>
+          <div className="mt-score-copy">
+            <span className="ui-kicker">{examName} · {subject}</span>
+            <h1>{result.band}</h1>
+            <p>{result.correctAnswers} correct of {result.totalQuestions} · {result.attempted} attempted · {clock(result.timeSpentSeconds)} taken</p>
+            <div className="mt-intro-actions">
+              <button type="button" className="ui-btn" onClick={() => { requested.current = true; generate() }}><RotateCcw /> New test, same subject</button>
+              <Link href="/analytics" className="ui-btn ui-btn-secondary">View progress</Link>
+            </div>
+          </div>
+        </section>
+
+        <h2 className="mt-review-title">Answer review</h2>
+        <div className="mt-review">
+          {questions.map((question, index) => {
+            const review = result.review[index]
+            return (
+              <article key={index} className={cx('ui-card mt-review-item', review?.isCorrect ? 'is-right' : 'is-wrong')}>
+                <header>
+                  <span className="mt-q-num">Q{index + 1}</span>
+                  {review?.isCorrect ? <span className="ui-badge is-ok"><CheckCircle2 /> Correct</span> : review?.selected === null ? <span className="ui-badge">Not answered</span> : <span className="ui-badge is-danger"><XCircle /> Incorrect</span>}
+                </header>
+                <p className="mt-q-text">{question.question}</p>
+                <ol className="mt-review-options">
+                  {question.options.map((option, optionIndex) => (
+                    <li key={optionIndex} className={cx(optionIndex === question.correct && 'is-correct', optionIndex === review?.selected && optionIndex !== question.correct && 'is-chosen')}>
+                      <b>{letters[optionIndex]}</b><span>{option}</span>
+                      {optionIndex === question.correct ? <Check /> : optionIndex === review?.selected ? <X /> : null}
+                    </li>
+                  ))}
+                </ol>
+                <div className="mt-explain"><strong>Why</strong><p>{question.explanation}</p></div>
+              </article>
+            )
+          })}
         </div>
       </div>
     )
   }
 
-  if (showResults && testResults) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-medical-50 dark:from-dark-900 dark:via-dark-800 dark:to-dark-900 theme-transition">
-        <Navbar />
-        
-        <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <div className="relative mb-6">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary-400 to-medical-400 rounded-full blur-2xl opacity-20 animate-pulse"></div>
-              <div className="relative p-6 bg-gradient-to-r from-primary-100 to-medical-100 dark:from-primary-900/30 dark:to-medical-900/30 rounded-full w-24 h-24 mx-auto flex items-center justify-center">
-                <CheckCircle className="h-12 w-12 text-primary-600 dark:text-primary-400" />
-              </div>
-            </div>
-            
-            <h1 className="text-4xl font-bold gradient-text mb-4">Test Completed!</h1>
-            <p className="text-gray-600 dark:text-gray-300">Here are your results</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8 mb-8">
-            <div className="card">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Score Summary</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600 dark:text-gray-400">Score</span>
-                  <span className={`text-3xl font-bold ${getScoreColor(testResults.score)}`}>
-                    {testResults.score}%
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600 dark:text-gray-400">Correct Answers</span>
-                  <span className="font-bold text-gray-900 dark:text-gray-100">
-                    {testResults.correctAnswers}/{testResults.totalQuestions}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600 dark:text-gray-400">Time Taken</span>
-                  <span className="font-bold text-gray-900 dark:text-gray-100">
-                    {Math.floor(testResults.timeSpent / 60)}m {testResults.timeSpent % 60}s
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="card">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Performance</h3>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600 dark:text-gray-400">Accuracy</span>
-                    <span className="text-gray-900 dark:text-gray-100">{testResults.score}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 dark:bg-dark-700 rounded-full h-2">
-                    <div 
-                      className="bg-gradient-to-r from-primary-500 to-medical-500 h-2 rounded-full transition-all duration-1000"
-                      style={{ width: `${testResults.score}%` }}
-                    ></div>
-                  </div>
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  <p>• {testResults.correctAnswers} correct answers</p>
-                  <p>• {testResults.totalQuestions - testResults.correctAnswers} incorrect answers</p>
-                  <p>• Average time per question: {Math.round(testResults.timeSpent / testResults.totalQuestions)}s</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-center space-x-4">
-            <button
-              onClick={() => router.push('/mock-tests')}
-              className="btn-secondary flex items-center space-x-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back to Tests</span>
-            </button>
-            <button
-              onClick={() => router.push('/analytics')}
-              className="btn-primary flex items-center space-x-2"
-            >
-              <span>View Analytics</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!testStarted) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-medical-50 dark:from-dark-900 dark:via-dark-800 dark:to-dark-900 theme-transition">
-        <Navbar />
-        
-        <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold gradient-text mb-4">Ready to Start?</h1>
-            <p className="text-gray-600 dark:text-gray-300">Review the test details before beginning</p>
-          </div>
-
-          <div className="card mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Test Details</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Test Information</h3>
-                <div className="space-y-2 text-gray-600 dark:text-gray-300">
-                  <p>• Exam: {exam?.toUpperCase()}</p>
-                  <p>• Subject: {subject}</p>
-                  <p>• Questions: {questionCount}</p>
-                  <p>• Duration: {duration} minutes</p>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Instructions</h3>
-                <div className="space-y-2 text-gray-600 dark:text-gray-300">
-                  <p>• Read each question carefully</p>
-                  <p>• Select the best answer</p>
-                  <p>• You can navigate between questions</p>
-                  <p>• Submit before time runs out</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center">
-            <button
-              onClick={startTest}
-              className="btn-primary text-xl px-12 py-4 flex items-center space-x-3 mx-auto"
-            >
-              <span>Start Test</span>
-              <ArrowRight className="h-6 w-6" />
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const currentQ = questions[currentQuestion]
+  const question = questions[current]
+  const answered = Object.keys(answers).length
+  const unanswered = questions.length - answered
+  const lowTime = left <= 60
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-medical-50 dark:from-dark-900 dark:via-dark-800 dark:to-dark-900 theme-transition">
-      <Navbar />
-      
-      <div className="max-w-6xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6 bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-gray-200/50 dark:border-dark-700/50">
-          <div className="flex items-center space-x-4">
-            <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Question {currentQuestion + 1} of {questions.length}
-            </span>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <div className={`flex items-center space-x-2 px-4 py-2 rounded-xl ${
-              timeLeft < 300 ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300' : 
-              'bg-primary-100 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
-            }`}>
-              <Clock className="h-5 w-5" />
-              <span className="font-bold">{formatTime(timeLeft)}</span>
-            </div>
-          </div>
-        </div>
+    <div className="mt-run">
+      <header className="mt-run-bar">
+        <div><span className="ui-card-label">{examName} · {subject}</span><strong>Question {current + 1} of {questions.length}</strong></div>
+        <div className={cx('mt-timer', lowTime && 'is-low')} role="timer" aria-live={lowTime ? 'assertive' : 'off'}><Timer /><span className="ui-num">{clock(left)}</span></div>
+        <button type="button" className="ui-btn ui-btn-sm" onClick={() => setConfirm(true)} disabled={phase === 'submitting'}>{phase === 'submitting' ? <><Spinner /> Submitting…</> : 'Submit'}</button>
+      </header>
+      <div className="ui-progress mt-run-progress" aria-hidden="true"><i style={{ width: `${(answered / questions.length) * 100}%` }} /></div>
 
-        <div className="grid lg:grid-cols-4 gap-6">
-          {/* Question Panel */}
-          <div className="lg:col-span-3">
-            <div className="card mb-6">
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 rounded-full text-sm font-medium">
-                    {currentQ?.difficulty?.toUpperCase()}
-                  </span>
-                </div>
-                
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6 leading-relaxed">
-                  {currentQ?.question}
-                </h2>
-                
-                <div className="space-y-3">
-                  {currentQ?.options.map((option, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleAnswerSelect(currentQuestion, index)}
-                      className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-300 ${
-                        answers[currentQuestion] === index
-                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
-                          : 'border-gray-200 dark:border-dark-700 hover:border-primary-300 dark:hover:border-primary-600 text-gray-700 dark:text-gray-300'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                          answers[currentQuestion] === index
-                            ? 'border-primary-500 bg-primary-500'
-                            : 'border-gray-300 dark:border-dark-600'
-                        }`}>
-                          {answers[currentQuestion] === index && (
-                            <CheckCircle className="h-4 w-4 text-white" />
-                          )}
-                        </div>
-                        <span className="font-medium">{String.fromCharCode(65 + index)}.</span>
-                        <span>{option}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-dark-700">
-                <button
-                  onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
-                  disabled={currentQuestion === 0}
-                  className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  <span>Previous</span>
-                </button>
-                
-                {currentQuestion === questions.length - 1 ? (
-                  <button
-                    onClick={handleSubmitTest}
-                    disabled={isSubmitting}
-                    className="btn-primary disabled:opacity-50 flex items-center space-x-2"
-                  >
-                    <span>{isSubmitting ? 'Submitting...' : 'Submit Test'}</span>
-                    <CheckCircle className="h-4 w-4" />
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setCurrentQuestion(Math.min(questions.length - 1, currentQuestion + 1))}
-                    className="btn-primary flex items-center space-x-2"
-                  >
-                    <span>Next</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            </div>
+      <div className="mt-run-layout">
+        <section className="ui-card mt-question" key={current}>
+          <div className="mt-question-head">
+            <span className="mt-q-num">Q{current + 1}</span>
+            <button type="button" className={cx('ui-chip', flags.has(current) && 'is-flagged')} aria-pressed={flags.has(current)} onClick={() => setFlags(items => { const next = new Set(items); if (next.has(current)) next.delete(current); else next.add(current); return next })}><Flag /> {flags.has(current) ? 'Flagged' : 'Flag'}</button>
           </div>
+          <p className="mt-q-text">{question.question}</p>
+          <div className="mt-options" role="radiogroup" aria-label={`Answers for question ${current + 1}`}>
+            {question.options.map((option, index) => (
+              <button key={index} type="button" role="radio" aria-checked={answers[current] === index} className={cx('mt-option', answers[current] === index && 'is-selected')} onClick={() => setAnswers(items => ({ ...items, [current]: index }))}>
+                <b>{letters[index]}</b><span>{option}</span>
+              </button>
+            ))}
+          </div>
+          <div className="mt-nav">
+            <button type="button" className="ui-btn ui-btn-secondary" onClick={() => setCurrent(value => value - 1)} disabled={current === 0}><ArrowLeft /> Previous</button>
+            {current < questions.length - 1
+              ? <button type="button" className="ui-btn" onClick={() => setCurrent(value => value + 1)}>Next <ArrowRight /></button>
+              : <button type="button" className="ui-btn" onClick={() => setConfirm(true)}>Finish <Check /></button>}
+          </div>
+        </section>
 
-          {/* Question Navigator */}
-          <div className="card h-fit">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Question Navigator</h3>
-            <div className="grid grid-cols-5 gap-2">
-              {questions.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentQuestion(index)}
-                  className={`w-10 h-10 rounded-lg font-semibold transition-all duration-300 ${
-                    index === currentQuestion
-                      ? 'bg-primary-600 text-white'
-                      : answers[index] !== undefined
-                      ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700'
-                      : 'bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-600'
-                  }`}
-                >
-                  {index + 1}
-                </button>
-              ))}
-            </div>
-            
-            <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-              <div className="flex items-center space-x-2 mb-2">
-                <div className="w-4 h-4 bg-green-100 dark:bg-green-900/20 border border-green-300 dark:border-green-700 rounded"></div>
-                <span>Answered</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-gray-100 dark:bg-dark-700 rounded"></div>
-                <span>Not answered</span>
-              </div>
-            </div>
+        <aside className="ui-card ui-card-pad mt-map">
+          <span className="ui-card-label">Question map</span>
+          <div className="mt-map-grid">
+            {questions.map((_, index) => (
+              <button key={index} type="button" onClick={() => setCurrent(index)} aria-label={`Go to question ${index + 1}`} aria-current={index === current ? 'true' : undefined}
+                className={cx(answers[index] !== undefined && 'is-answered', flags.has(index) && 'is-flagged', index === current && 'is-current')}>{index + 1}</button>
+            ))}
           </div>
-        </div>
+          <div className="mt-map-legend"><span><i className="is-answered" /> Answered {answered}</span><span><i className="is-flagged" /> Flagged {flags.size}</span><span><i /> Left {unanswered}</span></div>
+        </aside>
       </div>
+
+      <Modal open={confirm} onOpenChange={setConfirm} title="Submit your test?" description={unanswered ? `${unanswered} question${unanswered === 1 ? ' is' : 's are'} still unanswered${flags.size ? ` and ${flags.size} flagged` : ''}.` : 'All questions are answered.'}
+        footer={<><button type="button" className="ui-btn ui-btn-secondary" onClick={() => setConfirm(false)}>Keep working</button><button type="button" className="ui-btn" onClick={submit}>Submit now</button></>}>
+        <p className="ui-muted" style={{ margin: 0 }}>You still have {clock(left)} remaining. After submitting you’ll see every answer with an explanation.</p>
+      </Modal>
     </div>
   )
 }

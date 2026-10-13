@@ -34,8 +34,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('light')
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    const legacy = localStorage.getItem('theme')
+    let stored: string | null = null
+    let legacy: string | null = null
+    try {
+      stored = localStorage.getItem(STORAGE_KEY)
+      legacy = localStorage.getItem('theme')
+    } catch {}
     const initial = stored === 'light' || stored === 'dark' || stored === 'system'
       ? stored
       : legacy === 'light' || legacy === 'dark'
@@ -56,8 +60,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [theme])
 
   const setTheme = useCallback((next: ThemePreference) => {
-    localStorage.setItem(STORAGE_KEY, next)
-    localStorage.removeItem('theme')
+    try {
+      localStorage.setItem(STORAGE_KEY, next)
+      localStorage.removeItem('theme')
+    } catch {}
+    const root = document.documentElement
+    root.classList.add('theme-shift')
+    window.setTimeout(() => root.classList.remove('theme-shift'), 420)
     setThemeState(next)
     setResolvedTheme(applyTheme(next))
   }, [])

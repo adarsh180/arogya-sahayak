@@ -1,22 +1,25 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { Activity, ArrowLeft, ArrowRight, BookOpen, Check, FileText, Languages, MessageSquareText, Mic, ShieldCheck } from 'lucide-react'
+import { Activity, ArrowLeft, ArrowRight, BookOpen, Check, FileText, MessageSquareText, Mic, ShieldCheck, Siren } from 'lucide-react'
+import Brand from '@/components/shell/Brand'
+import ThemeToggle from '@/components/shell/ThemeToggle'
+import { BrandLoader, Spinner, cx } from '@/components/ui/kit'
+import { api, errorMessage } from '@/lib/client-api'
 
 const languages = [
-  ['en', 'English'], ['hi', 'हिंदी'], ['bn', 'বাংলা'], ['te', 'తెలుగు'],
-  ['mr', 'मराठी'], ['ta', 'தமிழ்'], ['gu', 'ગુજરાતી'], ['kn', 'ಕನ್ನಡ'],
-  ['ml', 'മലയാളം'], ['pa', 'ਪੰਜਾਬੀ'], ['or', 'ଓଡ଼ିଆ'], ['ur', 'اردو']
+  ['en', 'English', 'English'], ['hi', 'हिंदी', 'Hindi'], ['bn', 'বাংলা', 'Bengali'], ['te', 'తెలుగు', 'Telugu'],
+  ['mr', 'मराठी', 'Marathi'], ['ta', 'தமிழ்', 'Tamil'], ['gu', 'ગુજરાતી', 'Gujarati'], ['kn', 'ಕನ್ನಡ', 'Kannada'],
+  ['ml', 'മലയാളം', 'Malayalam'], ['pa', 'ਪੰਜਾਬੀ', 'Punjabi'], ['or', 'ଓଡ଼ିଆ', 'Odia'], ['ur', 'اردو', 'Urdu']
 ]
 
 const steps = [
-  { label: 'Purpose', title: 'Shape the space around your goal.' },
-  { label: 'Language', title: 'Choose how Arogya speaks with you.' },
-  { label: 'Orientation', title: 'Learn the three places that matter.' },
-  { label: 'Boundaries', title: 'Know what happens to your information.' }
+  { label: 'Focus', title: 'What brings you to Arogya?' },
+  { label: 'Language', title: 'Which language should Arogya answer in?' },
+  { label: 'Tour', title: 'Three places you’ll use most.' },
+  { label: 'Boundaries', title: 'What Arogya is — and isn’t.' },
 ]
 
 export default function OnboardingPage() {
@@ -25,72 +28,113 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0)
   const [mode, setMode] = useState<'patient' | 'student'>('patient')
   const [language, setLanguage] = useState('en')
+  const [accepted, setAccepted] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [accepted, setAccepted] = useState(false)
 
   useEffect(() => {
     if (status === 'unauthenticated') router.replace('/auth/signin?callbackUrl=/onboarding')
     if (session?.user.userType === 'student') setMode('student')
     if (session?.user.preferredLanguage) setLanguage(session.user.preferredLanguage)
-  }, [router, session, status])
+  }, [router, session?.user.preferredLanguage, session?.user.userType, status])
 
   async function finish() {
-    if (!accepted) return setError('Please confirm the medical boundary before entering the workspace.')
+    if (!accepted) return setError('Please confirm the medical boundary to continue.')
     setSaving(true)
     setError('')
-    const response = await fetch('/api/user/profile', {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userType: mode, preferredLanguage: language, onboardingCompleted: true })
-    })
-    if (!response.ok) {
-      setError('We could not save your setup. Please try again.')
+    try {
+      await api('/api/user/profile', { method: 'PUT', json: { userType: mode, preferredLanguage: language, onboardingCompleted: true } })
+      await update()
+      router.push(mode === 'student' ? '/student' : '/dashboard')
+    } catch (reason) {
+      setError(errorMessage(reason, 'We could not save your setup. Please try again.'))
       setSaving(false)
-      return
     }
-    localStorage.setItem('arogya:onboarding-complete', 'true')
-    localStorage.removeItem('arogya:tour-complete')
-    await update()
-    router.push(mode === 'student' ? '/student' : '/dashboard')
   }
 
-  if (status === 'loading') return <div className="as-segment-loader"><div className="as-loader-stage"><span className="as-loader-orbit" /><Image src="/arogya-mark.png" alt="" width={54} height={54} /></div></div>
+  if (status !== 'authenticated') return <BrandLoader screen label="Preparing your setup" />
 
   return (
-    <main id="main-content" className="as-onboarding">
-      <header className="as-onboarding-header">
-        <div className="as-brand"><Image src="/arogya-mark.png" alt="" width={38} height={38} /><span><strong>Arogya</strong> Sahayak</span></div>
-        <button type="button" onClick={() => router.push('/dashboard')}>Finish later</button>
+    <div className="onb">
+      <header className="onb-top">
+        <Brand href="/dashboard" />
+        <div className="onb-top-actions">
+          <ThemeToggle />
+          <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" onClick={() => router.push('/dashboard')}>Finish later</button>
+        </div>
       </header>
 
-      <div className="as-onboarding-shell">
-        <aside className="as-onboarding-rail" aria-label="Setup progress">
-          <span>Setup</span>
-          <ol>{steps.map((item, index) => <li key={item.label} className={index === step ? 'is-active' : index < step ? 'is-done' : ''}><i>{index < step ? <Check /> : index + 1}</i><span><strong>{item.label}</strong>{item.title}</span></li>)}</ol>
-        </aside>
+      <main id="main-content" className="onb-main">
+        <ol className="onb-steps" aria-label="Setup progress">
+          {steps.map((item, index) => (
+            <li key={item.label} className={cx(index === step && 'is-active', index < step && 'is-done')} aria-current={index === step ? 'step' : undefined}>
+              <i>{index < step ? <Check /> : index + 1}</i><span>{item.label}</span>
+            </li>
+          ))}
+        </ol>
 
-        <section className="as-onboarding-content">
-          <div className="as-onboarding-progress"><i style={{ width: `${((step + 1) / steps.length) * 100}%` }} /></div>
-          <span className="as-kicker">Step {step + 1} of {steps.length} · {steps[step].label}</span>
+        <section className="onb-card ui-card" key={step}>
+          <span className="ui-kicker">Step {step + 1} of {steps.length}</span>
           <h1>{steps[step].title}</h1>
 
-          {step === 0 && <div className="as-onboarding-options"><button className={mode === 'patient' ? 'is-selected' : ''} onClick={() => setMode('patient')}><Activity /><span><strong>Personal health</strong>Organise measurements, medicines, appointments and questions.</span>{mode === 'patient' && <Check />}</button><button className={mode === 'student' ? 'is-selected' : ''} onClick={() => setMode('student')}><BookOpen /><span><strong>Medical learning</strong>Build study sessions, active recall and practice cases.</span>{mode === 'student' && <Check />}</button><p>You are not locked in. Both spaces remain available.</p></div>}
+          {step === 0 && (
+            <div className="onb-options">
+              {([
+                ['patient', Activity, 'My health & family', 'Track readings and medicines, prepare for visits and ask health questions.'],
+                ['student', BookOpen, 'Medical learning', 'Study with an AI tutor, practise MCQs and plan your preparation.'],
+              ] as const).map(([value, Icon, title, copy]) => (
+                <button key={value} type="button" className={cx('onb-option', mode === value && 'is-selected')} onClick={() => setMode(value)} aria-pressed={mode === value}>
+                  <span className="onb-option-icon"><Icon /></span>
+                  <span><strong>{title}</strong><small>{copy}</small></span>
+                  <i className="onb-radio">{mode === value && <Check />}</i>
+                </button>
+              ))}
+              <p className="ui-faint">You can use both spaces any time — this only sets your starting point.</p>
+            </div>
+          )}
 
-          {step === 1 && <div className="as-language-grid" role="radiogroup" aria-label="Preferred language">{languages.map(([code, label]) => <button key={code} role="radio" aria-checked={language === code} className={language === code ? 'is-selected' : ''} onClick={() => setLanguage(code)}><Languages />{label}{language === code && <Check />}</button>)}</div>}
+          {step === 1 && (
+            <div className="onb-languages" role="radiogroup" aria-label="Preferred language">
+              {languages.map(([code, native, english]) => (
+                <button key={code} type="button" role="radio" aria-checked={language === code} className={cx('onb-lang', language === code && 'is-selected')} onClick={() => setLanguage(code)}>
+                  <strong>{native}</strong><small>{english}</small>{language === code && <Check />}
+                </button>
+              ))}
+            </div>
+          )}
 
-          {step === 2 && <div className="as-tour-preview"><div className="as-tour-path" aria-hidden="true"><i /><ArrowRight /><i /><ArrowRight /><i /></div><article><span>01</span><MessageSquareText /><strong>Ask Arogya</strong><p>Start a sourced conversation. Use voice when your browser supports it.</p></article><article><span>02</span><Activity /><strong>Your overview</strong><p>See what is due and what changed without alarmist scoring.</p></article><article><span>03</span><FileText /><strong>Your records</strong><p>Keep files and measurements ready for a real clinical conversation.</p></article><div className="as-tour-tip"><Mic /><span>Look for short guided callouts after setup. They point to real controls and disappear when you are done.</span></div></div>}
+          {step === 2 && (
+            <div className="onb-tour">
+              {[
+                [MessageSquareText, 'Ask Arogya', 'Ask in your language — by typing or speaking. Answers show the sources they used.'],
+                [Activity, 'Overview', 'Readings, medicine times and what changed, on one calm screen.'],
+                [Siren, 'Emergency', 'National helplines and your own trusted contacts, always one tap away.'],
+              ].map(([Icon, title, copy], index) => {
+                const TourIcon = Icon as typeof Activity
+                return <article key={String(title)} style={{ '--d': `${index * 80}ms` } as React.CSSProperties} className="ui-rise"><span className="ui-row-icon"><TourIcon /></span><div><strong>{String(title)}</strong><p>{String(copy)}</p></div></article>
+              })}
+            </div>
+          )}
 
-          {step === 3 && <div className="as-boundary-list"><article><ShieldCheck /><div><strong>AI is not a clinician</strong><p>Answers are educational. Uncertainty, sources and a human next step should remain visible.</p></div></article><article><FileText /><div><strong>Upload only what is needed</strong><p>Document text can be sent to your configured AI provider when you ask about it. Remove unnecessary identifiers first.</p></div></article><article><Mic /><div><strong>Microphone access is on demand</strong><p>Browser voice asks permission only when you activate it. A local endpoint is optional and never downloaded automatically.</p></div></article><label className="as-boundary-check"><input type="checkbox" checked={accepted} onChange={event => setAccepted(event.target.checked)} /><span>I understand that Arogya Sahayak is not for diagnosis or emergency response.</span></label></div>}
+          {step === 3 && (
+            <div className="onb-bounds">
+              <article><ShieldCheck /><div><strong>Not a doctor</strong><p>Answers are educational. They can be wrong and never replace a clinician’s assessment.</p></div></article>
+              <article><FileText /><div><strong>Share only what’s needed</strong><p>Uploaded text may be sent to the AI provider with your question. Remove names and ID numbers first.</p></div></article>
+              <article><Mic /><div><strong>Microphone on request</strong><p>Voice input asks for permission only when you tap the microphone.</p></div></article>
+              <label className="ui-check onb-accept"><input type="checkbox" checked={accepted} onChange={event => { setAccepted(event.target.checked); setError('') }} /><span>I understand Arogya Sahayak is not for diagnosis or emergencies. In an emergency I will call 112.</span></label>
+            </div>
+          )}
 
-          {error && <div className="as-form-error" role="alert">{error}</div>}
-          <div className="as-onboarding-actions">
-            <button type="button" className="as-back-button" onClick={() => setStep(value => Math.max(0, value - 1))} disabled={step === 0}><ArrowLeft /> Back</button>
+          {error && <div className="ui-alert is-danger" role="alert"><ShieldCheck /><span>{error}</span></div>}
+
+          <div className="onb-actions">
+            <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setStep(value => Math.max(0, value - 1))} disabled={step === 0}><ArrowLeft /> Back</button>
             {step < steps.length - 1
-              ? <button type="button" className="as-button" onClick={() => setStep(value => value + 1)}>Continue <ArrowRight /></button>
-              : <button type="button" className="as-button" onClick={finish} disabled={saving || !accepted}>{saving ? 'Saving…' : <>Enter my workspace <ArrowRight /></>}</button>}
+              ? <button type="button" className="ui-btn" onClick={() => setStep(value => value + 1)}>Continue <ArrowRight /></button>
+              : <button type="button" className="ui-btn" onClick={finish} disabled={saving || !accepted}>{saving ? <><Spinner /> Saving…</> : <>Enter my workspace <ArrowRight /></>}</button>}
           </div>
         </section>
-      </div>
-    </main>
+      </main>
+    </div>
   )
 }

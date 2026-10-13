@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { ZodSchema } from 'zod'
+import type { ZodTypeAny, output } from 'zod'
 
 type Bucket = { count: number; resetAt: number }
 
@@ -35,7 +35,7 @@ export function rateLimitResponse(retryAfter: number) {
   )
 }
 
-export async function parseJson<T>(request: NextRequest, schema: ZodSchema<T>) {
+export async function parseJson<S extends ZodTypeAny>(request: NextRequest, schema: S) {
   const declaredLength = Number(request.headers.get('content-length') || 0)
   if (declaredLength > MAX_BODY_BYTES) {
     return { ok: false as const, response: NextResponse.json({ error: 'Request is too large.' }, { status: 413 }) }
@@ -44,15 +44,18 @@ export async function parseJson<T>(request: NextRequest, schema: ZodSchema<T>) {
   try {
     const parsed = schema.safeParse(await request.json())
     if (!parsed.success) {
+      const issue = parsed.error.issues[0]
+      const field = issue?.path.join('.')
+      const label = field ? field.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').toLowerCase() : ''
       return {
         ok: false as const,
         response: NextResponse.json(
-          { error: 'Invalid request.', details: parsed.error.flatten().fieldErrors },
+          { error: issue ? `Please check ${label || 'your entry'}: ${issue.message.charAt(0).toLowerCase()}${issue.message.slice(1).replace(/\.$/, '')}.` : 'Invalid request.', details: parsed.error.flatten().fieldErrors },
           { status: 400 }
         )
       }
     }
-    return { ok: true as const, data: parsed.data }
+    return { ok: true as const, data: parsed.data as output<S> }
   } catch {
     return { ok: false as const, response: NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 }) }
   }

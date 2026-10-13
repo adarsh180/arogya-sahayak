@@ -40,7 +40,7 @@ export default function MessageRenderer({ content }: MessageRendererProps) {
         index += 1
       }
       output.push(
-        <div className="as-answer-table-wrap" key={`table-${index}`}>
+        <div className="ui-prose-table" key={`table-${index}`}>
           <table><thead><tr>{headers.map((header, cell) => <th key={cell}>{inline(header)}</th>)}</tr></thead>
             <tbody>{rows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((value, cell) => <td key={cell}>{inline(value)}</td>)}</tr>)}</tbody>
           </table>
@@ -80,5 +80,5 @@ export default function MessageRenderer({ content }: MessageRendererProps) {
     index += 1
   }
 
-  return <div className="as-rich-message">{output}</div>
+  return <div className="ui-prose">{output}</div>
 }

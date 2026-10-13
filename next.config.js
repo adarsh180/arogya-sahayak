@@ -4,6 +4,14 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   serverExternalPackages: ['pdf-parse'],
+  async redirects() {
+    return [
+      { source: '/dictionary', destination: '/medical-dictionary', permanent: true },
+      { source: '/student/chat', destination: '/chat?type=student', permanent: true },
+      { source: '/health-records', destination: '/health-tracker?tab=history', permanent: false },
+      { source: '/appointments', destination: '/chat?prompt=appointment', permanent: false },
+    ]
+  },
   async headers() {
     return [
       {

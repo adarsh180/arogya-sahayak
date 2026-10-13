@@ -32,6 +32,8 @@ Return your response as a valid JSON object with this EXACT structure (no additi
   "term": "Proper Medical Term Name",
   "pronunciation": "phonetic pronunciation (e.g., hahy-per-TEN-shuhn)",
   "definition": "Detailed, accurate medical definition in 2-3 sentences",
+  "simple": "The same idea in one or two plain-language sentences a non-medical reader understands",
+  "hindi": "Common Hindi name in Devanagari, or an empty string if there is none",
   "category": "${category !== 'all' ? category : 'cardiology/neurology/pharmacology/anatomy/pathology/ophthalmology/general'}",
   "difficulty": "${difficulty !== 'all' ? difficulty : 'basic/intermediate/advanced'}",
   "examples": ["Clinical example 1", "Clinical example 2"],
@@ -52,7 +54,9 @@ IMPORTANT GUIDELINES:
       [{ role: 'user', content: aiPrompt }],
       'medical',
       'en',
-      1
+      1,
+      undefined,
+      { temperature: 0.2, maxTokens: 900 }
     )
 
     if (!aiResponse || aiResponse.includes('technical difficulties') || aiResponse.includes('high demand')) {
@@ -88,7 +92,7 @@ IMPORTANT GUIDELINES:
         pronunciation: '',
         category: category !== 'all' ? category : 'general',
         difficulty: difficulty !== 'all' ? difficulty : 'intermediate',
-        examples: ['Please search again for detailed examples'],
+        examples: [],
         relatedTerms: []
       }
     }
@@ -105,7 +109,10 @@ IMPORTANT GUIDELINES:
     result.category = result.category || (category !== 'all' ? category : 'general')
     result.difficulty = result.difficulty || (difficulty !== 'all' ? difficulty : 'intermediate')
     result.examples = result.examples || []
-    result.relatedTerms = result.relatedTerms || []
+    result.relatedTerms = Array.isArray(result.relatedTerms) ? result.relatedTerms.slice(0, 6) : []
+    result.examples = Array.isArray(result.examples) ? result.examples.slice(0, 4) : []
+    result.simple = typeof result.simple === 'string' ? result.simple : ''
+    result.hindi = typeof result.hindi === 'string' ? result.hindi : ''
 
     return NextResponse.json({
       results: [result],

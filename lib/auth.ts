@@ -26,9 +26,10 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
-        })
+        const email = credentials.email.trim().toLowerCase()
+        // Accounts are stored lower-case; older accounts may keep their original casing.
+        const user = await prisma.user.findUnique({ where: { email } })
+          ?? (email !== credentials.email.trim() ? await prisma.user.findUnique({ where: { email: credentials.email.trim() } }) : null)
 
         if (!user || !user.password) return null
 
@@ -75,7 +76,8 @@ export const authOptions: NextAuthOptions = {
             location: true,
             preferredLanguage: true,
             userType: true,
-            onboardingCompleted: true
+            onboardingCompleted: true,
+            targetExam: true
           }
         })
         

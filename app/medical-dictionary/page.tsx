@@ -1,449 +1,188 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import {
-  BookOpen, Search, Heart, Brain, Eye, Stethoscope,
-  Pill, Microscope, Star, Volume2, Copy, Loader2
-} from 'lucide-react'
-import Navbar from '@/components/Navbar'
+import { FormEvent, useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import { ArrowRight, BookA, Clock, Lightbulb, Languages, Search, Star, Volume2, X } from 'lucide-react'
+import AppShell from '@/components/shell/AppShell'
+import { EmptyState, PageHeader, Skeleton, Spinner, cx } from '@/components/ui/kit'
+import { api, errorMessage } from '@/lib/client-api'
 
-interface MedicalTerm {
-  id: string
-  term: string
-  definition: string
-  pronunciation: string
-  category: string
-  examples: string[]
-  relatedTerms: string[]
-  difficulty: 'basic' | 'intermediate' | 'advanced'
-  isFavorite?: boolean
+type Term = { id: string; term: string; pronunciation?: string; definition: string; simple?: string; hindi?: string; category?: string; difficulty?: string; examples?: string[]; relatedTerms?: string[] }
+
+const categories = ['all', 'anatomy', 'cardiology', 'neurology', 'pharmacology', 'pathology', 'ophthalmology', 'general']
+const suggestions = ['Hypertension', 'Anaemia', 'Tachycardia', 'HbA1c', 'Thyroid', 'Dyspnoea']
+const HISTORY_KEY = 'arogya:dictionary-history'
+const CACHE_KEY = 'arogya:dictionary-cache'
+
+const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+const titleFromSlug = (value: string) => value.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ')
+
+function readJSON<T>(key: string, fallback: T, storage: 'local' | 'session' = 'local'): T {
+  try { return JSON.parse((storage === 'local' ? localStorage : sessionStorage).getItem(key) || '') as T } catch { return fallback }
 }
 
-export default function MedicalDictionary() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [selectedDifficulty, setSelectedDifficulty] = useState('all')
-  const [searchResults, setSearchResults] = useState<MedicalTerm[]>([])
-  const [favorites, setFavorites] = useState<string[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
+export default function DictionaryPage() {
+  return <AppShell loadingLabel="Opening the dictionary"><Dictionary /></AppShell>
+}
 
-  const categories = [
-    { id: 'all', name: 'All Categories', icon: BookOpen },
-    { id: 'anatomy', name: 'Anatomy', icon: Heart },
-    { id: 'cardiology', name: 'Cardiology', icon: Heart },
-    { id: 'neurology', name: 'Neurology', icon: Brain },
-    { id: 'ophthalmology', name: 'Ophthalmology', icon: Eye },
-    { id: 'pharmacology', name: 'Pharmacology', icon: Pill },
-    { id: 'pathology', name: 'Pathology', icon: Microscope },
-    { id: 'general', name: 'General Medicine', icon: Stethoscope }
-  ]
+function Dictionary() {
+  const [query, setQuery] = useState('')
+  const [category, setCategory] = useState('all')
+  const [result, setResult] = useState<Term | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [favorites, setFavorites] = useState<string[]>([])
+  const [history, setHistory] = useState<string[]>([])
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/signin')
-    } else if (session) {
-      loadFavorites()
-    }
-  }, [status, session, router])
+    api<{ favorites: string[] }>('/api/medical-dictionary/favorites').then(data => setFavorites(data.favorites || [])).catch(() => undefined)
+    setHistory(readJSON<string[]>(HISTORY_KEY, []))
+  }, [])
 
-  const loadFavorites = async () => {
-    try {
-      const response = await fetch('/api/medical-dictionary/favorites')
-      if (response.ok) {
-        const data = await response.json()
-        setFavorites(data.favorites || [])
-      }
-    } catch (error) {
-      console.error('Failed to load favorites:', error)
-    }
-  }
-
-  const searchMedicalTerms = async () => {
-    if (!searchTerm.trim()) return
-
-    setIsLoading(true)
-    try {
-      // Use AI-powered search for real-time medical definitions
-      const response = await fetch('/api/medical-dictionary/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          term: searchTerm,
-          category: selectedCategory,
-          difficulty: selectedDifficulty
-        })
+  const lookup = useCallback(async (raw: string) => {
+    const term = raw.trim()
+    if (term.length < 2) return toast.error('Type at least two letters.')
+    setQuery(term)
+    const cacheKey = `${slug(term)}|${category}`
+    const cache = readJSON<Record<string, Term>>(CACHE_KEY, {}, 'session')
+    const remember = (found: Term) => {
+      setHistory(current => {
+        const next = [found.term, ...current.filter(item => item.toLowerCase() !== found.term.toLowerCase())].slice(0, 8)
+        try { localStorage.setItem(HISTORY_KEY, JSON.stringify(next)) } catch {}
+        return next
       })
-
-      if (response.ok) {
-        const data = await response.json()
-        setSearchResults(data.results || [])
-      } else {
-        toast.error('Failed to search. Please try again.')
-      }
-    } catch (error) {
-      console.error('Search error:', error)
-      toast.error('Network error. Please check your connection.')
+    }
+    if (cache[cacheKey]) { setResult(cache[cacheKey]); remember(cache[cacheKey]); return }
+    setLoading(true)
+    try {
+      const data = await api<{ results: Term[] }>('/api/medical-dictionary/search', { method: 'POST', json: { term, category } })
+      const found = data.results?.[0]
+      if (!found) throw new Error('No definition was found for that term.')
+      setResult(found)
+      remember(found)
+      try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ...cache, [cacheKey]: found })) } catch {}
+    } catch (reason) {
+      toast.error(errorMessage(reason, 'That term could not be looked up right now.'))
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
-  }
+  }, [category])
 
-  const toggleFavorite = async (termId: string) => {
+  async function toggleFavorite(term: Term) {
+    const termId = slug(term.term)
     try {
-      const response = await fetch('/api/medical-dictionary/favorites', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ termId })
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setFavorites(data.favorites)
-        toast.success(data.added ? 'Added to favorites' : 'Removed from favorites')
-      }
-    } catch (error) {
-      toast.error('Failed to update favorites')
+      const data = await api<{ added: boolean; favorites: string[] }>('/api/medical-dictionary/favorites', { method: 'POST', json: { termId } })
+      setFavorites(data.favorites)
+      toast.success(data.added ? 'Saved to favourites' : 'Removed from favourites')
+    } catch (reason) {
+      toast.error(errorMessage(reason))
     }
   }
 
-  const speakTerm = (text: string) => {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text)
-      utterance.rate = 0.8
-      speechSynthesis.speak(utterance)
-    } else {
-      toast.error('Speech synthesis not supported')
-    }
+  function speak(text: string) {
+    if (!('speechSynthesis' in window)) return toast.error('Read-aloud is not supported in this browser.')
+    window.speechSynthesis.cancel()
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.lang = 'en-IN'
+    utterance.rate = 0.85
+    window.speechSynthesis.speak(utterance)
   }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      toast.success('Copied to clipboard')
-    }).catch(() => {
-      toast.error('Failed to copy')
-    })
+  function submit(event: FormEvent) {
+    event.preventDefault()
+    lookup(query)
   }
 
-  const filteredResults = showFavoritesOnly
-    ? searchResults.filter(term => favorites.includes(term.id))
-    : searchResults
-
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-zinc-600 animate-spin" />
-      </div>
-    )
-  }
+  const isFavorite = result ? favorites.includes(slug(result.term)) : false
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] relative overflow-hidden">
-      {/* Smoky Background Animations */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.03, 0.06, 0.03],
-            x: [0, 50, 0],
-            y: [0, -50, 0],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="absolute top-0 left-1/4 w-[800px] h-[800px] rounded-full bg-purple-500 blur-[150px]"
-        />
-        <motion.div
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.02, 0.05, 0.02],
-            x: [0, -80, 0],
-            y: [0, 80, 0],
-          }}
-          transition={{
-            duration: 25,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 5
-          }}
-          className="absolute bottom-0 right-1/4 w-[700px] h-[700px] rounded-full bg-cyan-400 blur-[150px]"
-        />
-        <motion.div
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.02, 0.04, 0.02],
-            x: [0, 60, 0],
-            y: [0, -60, 0],
-          }}
-          transition={{
-            duration: 18,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 10
-          }}
-          className="absolute top-1/2 right-1/3 w-[600px] h-[600px] rounded-full bg-pink-500 blur-[150px]"
-        />
-      </div>
+    <>
+      <PageHeader kicker="Medical dictionary" title="Understand the words your report uses." description="Look up any medical term for a precise definition, a plain-language explanation and related concepts." />
 
-      <Navbar />
-
-      <div className="pt-20 pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-xl bg-zinc-900 flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-zinc-400" />
-              </div>
-              <h1 className="text-4xl font-normal text-zinc-100">Medical Dictionary</h1>
-            </div>
-            <p className="text-lg text-zinc-500">
-              Explore medical terminology with AI-powered definitions and pronunciations
-            </p>
-          </motion.div>
-
-          {/* Search Section */}
-          <div className="bg-[#1a1a1a] border border-zinc-800 rounded-2xl p-6 mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Search className="w-5 h-5 text-zinc-400" />
-              <h2 className="text-lg font-semibold text-zinc-200">Search Medical Terms</h2>
-            </div>
-
-            <div className="space-y-4">
-              {/* Search Input */}
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && searchMedicalTerms()}
-                  placeholder="Search for medical terms, conditions, procedures..."
-                  className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 text-zinc-200 placeholder:text-zinc-600 rounded-xl focus:outline-none focus:border-zinc-700 pr-24"
-                />
-                <button
-                  onClick={searchMedicalTerms}
-                  disabled={isLoading || !searchTerm.trim()}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Search className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-
-              {/* Filters */}
-              <div className="grid md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-2">Category</label>
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full px-4 py-2 bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-xl focus:outline-none focus:border-zinc-700"
-                  >
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>{category.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-2">Difficulty</label>
-                  <select
-                    value={selectedDifficulty}
-                    onChange={(e) => setSelectedDifficulty(e.target.value)}
-                    className="w-full px-4 py-2 bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-xl focus:outline-none focus:border-zinc-700"
-                  >
-                    <option value="all">All Levels</option>
-                    <option value="basic">Basic</option>
-                    <option value="intermediate">Intermediate</option>
-                    <option value="advanced">Advanced</option>
-                  </select>
-                </div>
-
-                <div className="flex items-end">
-                  <button
-                    onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                    className={`w-full px-4 py-2 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 ${showFavoritesOnly
-                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
-                      : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border border-zinc-800'
-                      }`}
-                  >
-                    <Star className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
-                    <span>Favorites</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Categories Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            {categories.slice(1).map((category, index) => (
-              <motion.button
-                key={category.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                onClick={() => {
-                  setSelectedCategory(category.id)
-                  setSearchTerm(category.name)
-                  searchMedicalTerms()
-                }}
-                className="group bg-[#1a1a1a] border border-zinc-800 hover:border-zinc-700 rounded-2xl p-5 transition-all"
-              >
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center mx-auto mb-3 group-hover:bg-zinc-800 transition-colors">
-                  <category.icon className="w-5 h-5 text-zinc-400" />
-                </div>
-                <h3 className="text-sm font-medium text-zinc-300 text-center group-hover:text-white transition-colors">
-                  {category.name}
-                </h3>
-              </motion.button>
-            ))}
-          </div>
-
-          {/* Search Results */}
-          <AnimatePresence mode="popLayout">
-            {filteredResults.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="space-y-4"
-              >
-                <h3 className="text-xl font-semibold text-zinc-200 mb-4">
-                  Results ({filteredResults.length})
-                </h3>
-
-                {filteredResults.map((term, index) => (
-                  <motion.div
-                    key={term.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="bg-[#1a1a1a] border border-zinc-800 rounded-2xl p-6 hover:border-zinc-700 transition-colors"
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h4 className="text-2xl font-semibold text-zinc-100">{term.term}</h4>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${term.difficulty === 'basic' ? 'bg-green-500/20 text-green-400' :
-                            term.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
-                              'bg-red-500/20 text-red-400'
-                            }`}>
-                            {term.difficulty}
-                          </span>
-                          <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-medium">
-                            {term.category}
-                          </span>
-                        </div>
-
-                        {term.pronunciation && (
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className="text-sm text-zinc-500 italic">/{term.pronunciation}/</span>
-                            <button
-                              onClick={() => speakTerm(term.term)}
-                              className="p-1 hover:bg-zinc-800 rounded transition-colors"
-                            >
-                              <Volume2 className="w-4 h-4 text-zinc-600" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => toggleFavorite(term.id)}
-                          className={`p-2 rounded-lg transition-colors ${favorites.includes(term.id)
-                            ? 'text-yellow-400 bg-yellow-500/20'
-                            : 'text-zinc-600 hover:text-yellow-400 hover:bg-yellow-500/10'
-                            }`}
-                        >
-                          <Star className={`w-5 h-5 ${favorites.includes(term.id) ? 'fill-current' : ''}`} />
-                        </button>
-                        <button
-                          onClick={() => copyToClipboard(`${term.term}: ${term.definition}`)}
-                          className="p-2 text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 rounded-lg transition-colors"
-                        >
-                          <Copy className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <p className="text-zinc-300 leading-relaxed mb-4">
-                      {term.definition}
-                    </p>
-
-                    {term.examples && term.examples.length > 0 && (
-                      <div className="mb-4">
-                        <h5 className="font-medium text-zinc-400 mb-2 text-sm">Examples:</h5>
-                        <ul className="space-y-1">
-                          {term.examples.map((example, idx) => (
-                            <li key={idx} className="text-sm text-zinc-500 flex items-start">
-                              <span className="text-zinc-700 mr-2">•</span>
-                              <span>{example}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {term.relatedTerms && term.relatedTerms.length > 0 && (
-                      <div>
-                        <h5 className="font-medium text-zinc-400 mb-2 text-sm">Related Terms:</h5>
-                        <div className="flex flex-wrap gap-2">
-                          {term.relatedTerms.map((relatedTerm, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => {
-                                setSearchTerm(relatedTerm)
-                                searchMedicalTerms()
-                              }}
-                              className="px-3 py-1 bg-zinc-900 text-zinc-400 rounded-full text-xs hover:bg-zinc-800 hover:text-zinc-300 transition-colors"
-                            >
-                              {relatedTerm}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </motion.div>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Empty State */}
-          {searchTerm && !isLoading && filteredResults.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-16"
-            >
-              <div className="w-16 h-16 rounded-2xl bg-zinc-900 flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-zinc-700" />
-              </div>
-              <h3 className="text-xl font-semibold text-zinc-300 mb-2">No Results Found</h3>
-              <p className="text-zinc-600 max-w-md mx-auto">
-                Try searching with different terms or browse by category above.
-              </p>
-            </motion.div>
-          )}
+      <form className="dict-search ui-rise" onSubmit={submit} role="search">
+        <div className="ui-input-group dict-input">
+          <Search />
+          <input className="ui-input" value={query} onChange={event => setQuery(event.target.value)} placeholder="Search a term — e.g. tachycardia, HbA1c, creatinine" aria-label="Medical term" maxLength={100} />
+          {query && <button type="button" className="ui-icon-btn" onClick={() => { setQuery(''); setResult(null) }} aria-label="Clear search"><X /></button>}
         </div>
+        <select className="ui-select dict-category" value={category} onChange={event => setCategory(event.target.value)} aria-label="Category">
+          {categories.map(item => <option key={item} value={item}>{item === 'all' ? 'All categories' : item.charAt(0).toUpperCase() + item.slice(1)}</option>)}
+        </select>
+        <button type="submit" className="ui-btn ui-btn-lg" disabled={loading}>{loading ? <Spinner /> : <Search />} Look up</button>
+      </form>
+
+      <div className="dict-layout">
+        <section className="dict-result">
+          {loading ? (
+            <div className="ui-card ui-card-pad grid gap-3"><Skeleton height={40} width="50%" /><Skeleton height={18} width="30%" /><Skeleton height={90} /><Skeleton height={60} /></div>
+          ) : result ? (
+            <article className="ui-card dict-entry ui-rise">
+              <header>
+                <div>
+                  <div className="dict-tags">
+                    {result.category && <span className="ui-badge is-bare">{result.category}</span>}
+                    {result.difficulty && <span className="ui-badge is-bare is-saffron">{result.difficulty}</span>}
+                  </div>
+                  <h2>{result.term}</h2>
+                  <p className="dict-pron">
+                    {result.pronunciation && <span>/{result.pronunciation}/</span>}
+                    {result.hindi && <span className="dict-hindi"><Languages /> {result.hindi}</span>}
+                  </p>
+                </div>
+                <div className="dict-actions">
+                  <button type="button" className="ui-icon-btn is-outlined" onClick={() => speak(result.term)} aria-label="Pronounce"><Volume2 /></button>
+                  <button type="button" className={cx('ui-icon-btn is-outlined dict-star', isFavorite && 'is-on')} onClick={() => toggleFavorite(result)} aria-pressed={isFavorite} aria-label={isFavorite ? 'Remove from favourites' : 'Save to favourites'}><Star /></button>
+                </div>
+              </header>
+              <section>
+                <h3>Definition</h3>
+                <p>{result.definition}</p>
+              </section>
+              {result.simple && (
+                <section className="dict-simple">
+                  <Lightbulb />
+                  <div><h3>In plain words</h3><p>{result.simple}</p></div>
+                </section>
+              )}
+              {result.examples?.length ? (
+                <section>
+                  <h3>In context</h3>
+                  <ul>{result.examples.map(example => <li key={example}>{example}</li>)}</ul>
+                </section>
+              ) : null}
+              {result.relatedTerms?.length ? (
+                <section>
+                  <h3>Related terms</h3>
+                  <div className="dict-chips">{result.relatedTerms.map(term => <button key={term} type="button" className="ui-chip" onClick={() => lookup(term)}>{term}<ArrowRight /></button>)}</div>
+                </section>
+              ) : null}
+              <p className="dict-note">AI-generated reference for learning. Your clinician’s explanation of your own results takes priority.</p>
+            </article>
+          ) : (
+            <div className="ui-card">
+              <EmptyState icon={BookA} title="Start with a word">
+                Try one of these, or type any term from a prescription or lab report.
+              </EmptyState>
+              <div className="dict-chips is-centered">{suggestions.map(term => <button key={term} type="button" className="ui-chip" onClick={() => lookup(term)}>{term}</button>)}</div>
+            </div>
+          )}
+        </section>
+
+        <aside className="dict-side">
+          <section className="ui-card ui-card-pad">
+            <div className="ui-card-head"><div><span className="ui-card-label">Saved</span><h3>Favourites</h3></div><Star /></div>
+            {favorites.length ? <div className="dict-chips">{favorites.map(id => <button key={id} type="button" className="ui-chip" onClick={() => lookup(titleFromSlug(id))}>{titleFromSlug(id)}</button>)}</div> : <p className="ui-faint dict-side-empty">Star a term to keep it here.</p>}
+          </section>
+          <section className="ui-card ui-card-pad">
+            <div className="ui-card-head"><div><span className="ui-card-label">This device</span><h3>Recent searches</h3></div><Clock /></div>
+            {history.length ? (
+              <>
+                <div className="dict-chips">{history.map(term => <button key={term} type="button" className="ui-chip" onClick={() => lookup(term)}>{term}</button>)}</div>
+                <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm dict-clear" onClick={() => { setHistory([]); try { localStorage.removeItem(HISTORY_KEY) } catch {} }}>Clear history</button>
+              </>
+            ) : <p className="ui-faint dict-side-empty">Your recent look-ups appear here.</p>}
+          </section>
+        </aside>
       </div>
-    </div>
+    </>
   )
 }

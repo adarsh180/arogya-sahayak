@@ -1,219 +1,81 @@
 'use client'
 
-import { useState } from 'react'
-import { Search, ChevronDown, ChevronRight, HelpCircle, Book, MessageCircle, Phone } from 'lucide-react'
-import Navbar from '@/components/Navbar'
+import { useMemo, useState } from 'react'
+import Link from 'next/link'
+import { Activity, ArrowRight, BookOpen, GraduationCap, LifeBuoy, Lock, MessageSquareText, Plus, Search, Siren } from 'lucide-react'
+import AdaptiveShell from '@/components/shell/AdaptiveShell'
+import { EmptyState, PageHeader } from '@/components/ui/kit'
 
-const faqs = [
+const groups = [
   {
-    category: 'Getting Started',
-    questions: [
-      {
-        q: 'How do I create an account on Arogya Sahayak?',
-        a: 'You can create an account by clicking the "Sign Up" button and filling in your details, or by signing up with Google for quick access.'
-      },
-      {
-        q: 'Is Arogya Sahayak free to use?',
-        a: 'Yes, Arogya Sahayak is completely free to use. All core features including AI medical chat, symptom checker, and health tracking are available at no cost.'
-      },
-      {
-        q: 'What languages does Arogya Sahayak support?',
-        a: 'We support 29+ Indian languages including Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, and many more regional languages.'
-      }
-    ]
+    title: 'Getting started', icon: BookOpen, items: [
+      ['Is Arogya Sahayak free?', 'Yes. Create an account with your email (or Google, where the operator has enabled it) and every feature is available at no cost.'],
+      ['Which languages can Arogya answer in?', 'Twelve: English, Hindi, Bengali, Telugu, Marathi, Tamil, Gujarati, Kannada, Malayalam, Punjabi, Odia and Urdu. Pick one in the chat header or set a default in your profile.'],
+      ['Can I switch between health and learning?', 'Any time. Your starting focus only changes what you see first — every section stays available from the sidebar.'],
+    ],
   },
   {
-    category: 'Medical Features',
-    questions: [
-      {
-        q: 'How accurate is the AI medical advice?',
-        a: 'Our AI provides general health information and guidance. While it\'s trained on medical knowledge, it should not replace professional medical consultation. Always consult a doctor for serious health concerns.'
-      },
-      {
-        q: 'Can I use the symptom checker for emergencies?',
-        a: 'No, the symptom checker is for informational purposes only. In case of medical emergencies, immediately contact emergency services (102) or visit the nearest hospital.'
-      },
-      {
-        q: 'How does the health tracker work?',
-        a: 'You can manually input your health metrics like BMI, blood pressure, glucose levels, and heart rate. The AI analyzes trends and provides insights about your health patterns.'
-      }
-    ]
+    title: 'Health features', icon: Activity, items: [
+      ['Can Arogya diagnose me or tell me what medicine to take?', 'No. Arogya explains information, helps you organise readings and prepare questions, and points you to a clinician. It never diagnoses, prescribes or sets a dose.'],
+      ['How do measurements work?', 'Record blood pressure, glucose, resting pulse or weight and height. Each reading is compared with general adult reference ranges and saved so you can see trends. A single reading is never treated as a diagnosis.'],
+      ['Why didn’t my medicine reminder pop up?', 'Reminders appear while Arogya is open in a browser tab. Use “Enable alerts” on the Medicines page to allow system notifications; if your browser blocked them, allow notifications for this site in its settings.'],
+      ['What should I do in an emergency?', 'Call 112 straight away. The Emergency page lists national helplines (108 ambulance, 14416 Tele-MANAS and more) and lets you save trusted contacts.'],
+    ],
   },
   {
-    category: 'Student Features',
-    questions: [
-      {
-        q: 'Which medical exams does the student corner support?',
-        a: 'We support 21+ medical entrance exams including NEET UG, NEET PG, AIIMS, JIPMER, FMGE, and many state-level medical entrance exams.'
-      },
-      {
-        q: 'Can I get practice questions for my target exam?',
-        a: 'Yes! Our AI tutor can generate practice questions, explain concepts, and provide study strategies tailored to your specific exam and subjects.'
-      },
-      {
-        q: 'Is the study material updated regularly?',
-        a: 'Our AI is trained on current medical knowledge and exam patterns. The content is continuously updated to reflect the latest medical information and exam trends.'
-      }
-    ]
+    title: 'Learning', icon: GraduationCap, items: [
+      ['Which exams are supported?', 'NEET UG, NEET PG, INI-CET, FMGE, NEET SS, NEET MDS and AIIMS Nursing, with subject lists for each.'],
+      ['Are the mock-test questions from past papers?', 'No. They are generated fresh for practice and come with an explanation. If an answer looks wrong, check a standard textbook — and treat it as a chance to reason it through.'],
+      ['How is my progress calculated?', 'Only from tests you completed and study sessions you marked done. Nothing is estimated or invented.'],
+    ],
   },
   {
-    category: 'Privacy & Security',
-    questions: [
-      {
-        q: 'Is my medical data secure?',
-        a: 'Yes, we use industry-standard encryption to protect your data. Your medical information is stored securely and is never shared with third parties without your consent.'
-      },
-      {
-        q: 'Can I delete my account and data?',
-        a: 'Yes, you can delete your account anytime from your profile settings. This will permanently remove all your data from our servers.'
-      },
-      {
-        q: 'Do you share data with healthcare providers?',
-        a: 'We do not share your personal health data with any healthcare providers or third parties without your explicit consent.'
-      }
-    ]
-  }
+    title: 'Privacy & data', icon: Lock, items: [
+      ['Who can see my health information?', 'Only you, through your account. When you ask an AI question, the relevant text is sent to the operator’s configured AI provider to produce the answer. See the privacy notice for details.'],
+      ['Can I delete my data?', 'You can delete individual readings, medicines, contacts, study sessions and conversations yourself. For full account deletion, use the contact page.'],
+      ['Should I upload my lab reports?', 'You can attach a PDF or text file to a question. Remove your name, ID numbers and anything not needed for the question before uploading.'],
+    ],
+  },
 ]
 
-export default function Help() {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(['Getting Started'])
-  const [expandedQuestions, setExpandedQuestions] = useState<string[]>([])
-
-  const toggleCategory = (category: string) => {
-    setExpandedCategories(prev =>
-      prev.includes(category)
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
-    )
-  }
-
-  const toggleQuestion = (question: string) => {
-    setExpandedQuestions(prev =>
-      prev.includes(question)
-        ? prev.filter(q => q !== question)
-        : [...prev, question]
-    )
-  }
-
-  const filteredFaqs = faqs.map(category => ({
-    ...category,
-    questions: category.questions.filter(
-      qa => qa.q.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            qa.a.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  })).filter(category => category.questions.length > 0)
+export default function HelpPage() {
+  const [query, setQuery] = useState('')
+  const filtered = useMemo(() => {
+    const term = query.trim().toLowerCase()
+    if (!term) return groups
+    return groups.map(group => ({ ...group, items: group.items.filter(([q, a]) => `${q} ${a}`.toLowerCase().includes(term)) })).filter(group => group.items.length)
+  }, [query])
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      
-      <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <HelpCircle className="h-16 w-16 text-blue-600 mx-auto mb-4" />
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Help Center</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Find answers to common questions about Arogya Sahayak and learn how to make the most of our features.
-          </p>
+    <AdaptiveShell>
+      <PageHeader kicker="Help centre" title="Answers, without the runaround." description="Quick answers about how Arogya works, what it can and can’t do, and how your information is handled." />
+      <div className="faq-layout">
+        <div>
+          <div className="ui-input-group faq-search"><Search /><input className="ui-input" value={query} onChange={event => setQuery(event.target.value)} placeholder="Search questions" aria-label="Search help" /></div>
+          {filtered.length ? filtered.map(({ title, icon: Icon, items }) => (
+            <section key={title} className="faq-group">
+              <h2><Icon />{title}</h2>
+              {items.map(([question, answer]) => (
+                <details key={question} className="faq-item">
+                  <summary>{question}<Plus /></summary>
+                  <p>{answer}</p>
+                </details>
+              ))}
+            </section>
+          )) : <div className="ui-card"><EmptyState icon={Search} title="No matching questions">Try a different word, or ask Arogya directly.</EmptyState></div>}
         </div>
-
-        {/* Search */}
-        <div className="mb-8">
-          <div className="relative">
-            <Search className="absolute left-4 top-4 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search for help topics..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+        <aside className="faq-aside">
+          <div className="ui-card ui-card-pad">
+            <div className="ui-card-head"><div><span className="ui-card-label">Still stuck?</span><h3>Ask Arogya</h3><p>Describe what you’re trying to do and get a step-by-step answer.</p></div><MessageSquareText /></div>
+            <Link href="/chat" className="ui-btn ui-btn-block">Open chat <ArrowRight /></Link>
           </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          <a href="/contact" className="card hover:shadow-lg transition-all duration-200 text-center group">
-            <MessageCircle className="h-12 w-12 text-blue-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Contact Support</h3>
-            <p className="text-gray-600 text-sm">Get personalized help from our support team</p>
-          </a>
-
-          <div className="card text-center">
-            <Book className="h-12 w-12 text-green-600 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">User Guide</h3>
-            <p className="text-gray-600 text-sm">Learn how to use all features effectively</p>
+          <div className="ui-card ui-card-pad">
+            <div className="ui-card-head"><div><span className="ui-card-label">Feedback</span><h3>Report a problem</h3><p>Found a bug or a wrong answer? Tell us.</p></div><LifeBuoy /></div>
+            <Link href="/contact" className="ui-btn ui-btn-secondary ui-btn-block">Contact</Link>
           </div>
-
-          <div className="card text-center">
-            <Phone className="h-12 w-12 text-purple-600 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Emergency Help</h3>
-            <p className="text-gray-600 text-sm">Quick access to emergency medical services</p>
-          </div>
-        </div>
-
-        {/* FAQ Sections */}
-        <div className="space-y-6">
-          {filteredFaqs.map((category) => (
-            <div key={category.category} className="card">
-              <button
-                onClick={() => toggleCategory(category.category)}
-                className="w-full flex items-center justify-between p-4 text-left"
-              >
-                <h2 className="text-xl font-semibold text-gray-900">{category.category}</h2>
-                {expandedCategories.includes(category.category) ? (
-                  <ChevronDown className="h-5 w-5 text-gray-500" />
-                ) : (
-                  <ChevronRight className="h-5 w-5 text-gray-500" />
-                )}
-              </button>
-
-              {expandedCategories.includes(category.category) && (
-                <div className="px-4 pb-4 space-y-4">
-                  {category.questions.map((qa, index) => (
-                    <div key={index} className="border-l-4 border-blue-200 pl-4">
-                      <button
-                        onClick={() => toggleQuestion(`${category.category}-${index}`)}
-                        className="w-full text-left font-medium text-gray-900 hover:text-blue-600 transition-colors"
-                      >
-                        {qa.q}
-                      </button>
-                      {expandedQuestions.includes(`${category.category}-${index}`) && (
-                        <p className="mt-2 text-gray-600 leading-relaxed">{qa.a}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Still Need Help */}
-        <div className="mt-12 card bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Still need help?</h2>
-            <p className="text-gray-600 mb-6">
-              Can't find what you're looking for? Our support team is here to help you.
-            </p>
-            <a
-              href="/contact"
-              className="btn-primary inline-flex items-center space-x-2"
-            >
-              <MessageCircle className="h-5 w-5" />
-              <span>Contact Support</span>
-            </a>
-          </div>
-        </div>
-
-        {/* Copyright */}
-        <div className="mt-16 pt-8 border-t border-gray-200 text-center">
-          <p className="text-gray-600">
-            © 2024 Arogya Sahayak. All rights reserved. Created by <strong>Adarsh Tiwari</strong> on 10/12/2024.
-          </p>
-        </div>
+          <Link href="/emergency" className="ui-alert is-danger"><Siren /><span><strong>Emergency?</strong> Call 112 now — see all helplines.</span></Link>
+        </aside>
       </div>
-    </div>
+    </AdaptiveShell>
   )
 }
