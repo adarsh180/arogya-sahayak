@@ -6,20 +6,11 @@ import {
 } from 'lucide-react'
 import { SiteFooter, SiteHeader } from '@/components/shell/SiteChrome'
 
-const orbit = [
-  { icon: MessageSquareText, label: 'Ask' },
-  { icon: Activity, label: 'Track' },
-  { icon: Pill, label: 'Medicines' },
-  { icon: GraduationCap, label: 'Learn' },
-  { icon: FileSearch, label: 'Evidence' },
-  { icon: Siren, label: 'SOS' },
-]
-
-const petals = [
-  { icon: MessageSquareText, tone: 'lotus', title: 'Ask with context', copy: 'A calm conversation that asks what matters, remembers the thread and answers in your language.' },
+const features = [
+  { icon: MessageSquareText, tone: 'rose', title: 'Ask with context', copy: 'A calm conversation that asks what matters, remembers the thread and answers in your language.' },
   { icon: FileSearch, tone: 'peacock', title: 'See the evidence', copy: 'Reviewed sources are found before a health answer and shown apart from generated text.' },
   { icon: Activity, tone: 'gold', title: 'Understand your numbers', copy: 'Blood pressure, glucose, pulse and BMI — trends against usual ranges, never an AI diagnosis.' },
-  { icon: Pill, tone: 'lotus', title: 'Stay on schedule', copy: 'Medicine reminders, a daily check-off and plain-language notes about what you take.' },
+  { icon: Pill, tone: 'rose', title: 'Stay on schedule', copy: 'Medicine reminders, a daily check-off and plain-language notes about what you take.' },
   { icon: Mic, tone: 'peacock', title: 'Speak naturally', copy: 'Talk instead of typing where your browser allows, and have answers read aloud.' },
   { icon: BookOpenCheck, tone: 'gold', title: 'Learn medicine actively', copy: 'Guided study, timed mock tests with explanations, study plans and honest progress.' },
 ]
@@ -53,28 +44,38 @@ export default function Home() {
               </ul>
             </div>
 
-            <div className="lp-mandala" aria-hidden="true">
-              <div className="lp-halo" />
-              <div className="lp-orbit">
-                {orbit.map(({ icon: Icon, label }, index) => (
-                  <span key={label} className="lp-bead" style={{ '--i': index } as React.CSSProperties}>
-                    <span className="lp-bead-in"><Icon /><small>{label}</small></span>
-                  </span>
-                ))}
+            <div className="lp-stage" aria-hidden="true">
+              <div className="lp-app">
+                <header><span className="lp-dot" /> Personal health space <small>Today</small></header>
+                <h3>Good morning, Meera</h3>
+                <div className="lp-app-vitals">
+                  <div><small>Blood pressure</small><strong>128/82</strong><span className="ui-badge is-ok">Within range</span></div>
+                  <div><small>Fasting glucose</small><strong>104</strong><span className="ui-badge is-warn">Above range</span></div>
+                </div>
+                <div className="lp-app-trend">
+                  <svg viewBox="0 0 300 64">
+                    <path d="M6 48 C40 46 52 34 84 36 S128 26 156 30 S206 18 236 24 S280 14 294 16" />
+                    {[[6, 48], [84, 36], [156, 30], [236, 24], [294, 16]].map(([cx, cy]) => <circle key={cx} cx={cx} cy={cy} r="4" />)}
+                  </svg>
+                  <small>Blood pressure · last 7 days</small>
+                </div>
+                <div className="lp-app-actions">
+                  <span><MessageSquareText /> Ask</span>
+                  <span><Activity /> Track</span>
+                  <span><GraduationCap /> Learn</span>
+                </div>
               </div>
-              <div className="lp-lotus">
-                {Array.from({ length: 8 }, (_, index) => <i key={index} style={{ '--i': index } as React.CSSProperties} />)}
+              <div className="lp-note is-chat">
+                <p className="lp-bubble is-user">Is a fasting sugar of 104 worth worrying about?</p>
+                <p className="lp-bubble is-bot"><Image src="/arogya-mark.png" alt="" width={18} height={18} /><span>It’s a little above the usual fasting range. One reading can’t diagnose anything — when was it taken?</span></p>
+                <span className="lp-source"><FileSearch /> WHO · Diabetes fact sheet</span>
               </div>
-              <div className="lp-core"><Image src="/arogya-mark.png" alt="" width={84} height={84} priority /></div>
-              <div className="lp-float is-vital">
-                <small>Blood pressure</small>
-                <strong>128/82</strong>
-                <span className="ui-badge is-ok">Within range</span>
+              <div className="lp-note is-dose">
+                <span className="lp-note-icon"><Pill /></span>
+                <span><small>Next dose · 20:00</small><strong>Metformin 500</strong></span>
+                <span className="lp-check"><Check /></span>
               </div>
-              <div className="lp-float is-chat">
-                <Image src="/arogya-mark.png" alt="" width={20} height={20} />
-                <span>One reading can’t diagnose anything — let’s look at when it was taken…</span>
-              </div>
+              <div className="lp-note is-sos"><Siren /><span>112</span></div>
             </div>
           </div>
         </section>
@@ -88,14 +89,14 @@ export default function Home() {
 
         <section id="capabilities" className="lp-section lp-wrap">
           <div className="lp-head">
-            <span className="ui-kicker">Six petals of care</span>
+            <span className="ui-kicker">Everything in one place</span>
             <h2>One gentle space for everything health asks of you.</h2>
             <p>Each tool has one clear job and a visible boundary, so nothing feels overwhelming.</p>
           </div>
-          <div className="lp-petals">
-            {petals.map(({ icon: Icon, tone, title, copy }, index) => (
-              <article key={title} className={`lp-petal is-${tone}`} style={{ '--d': `${index * 70}ms` } as React.CSSProperties}>
-                <span className="lp-petal-icon"><Icon /></span>
+          <div className="lp-features">
+            {features.map(({ icon: Icon, tone, title, copy }, index) => (
+              <article key={title} className={`lp-feature is-${tone}`} style={{ '--d': `${index * 70}ms` } as React.CSSProperties}>
+                <span className="lp-feature-icon"><Icon /></span>
                 <h3>{title}</h3>
                 <p>{copy}</p>
               </article>
@@ -150,7 +151,7 @@ export default function Home() {
 
         <section className="lp-section lp-wrap">
           <div className="lp-cta">
-            <div className="lp-cta-lotus" aria-hidden="true">{Array.from({ length: 8 }, (_, index) => <i key={index} style={{ '--i': index } as React.CSSProperties} />)}<Image src="/arogya-mark.png" alt="" width={46} height={46} /></div>
+            <span className="lp-cta-mark" aria-hidden="true"><Image src="/arogya-mark.png" alt="" width={48} height={48} /></span>
             <h2>Built to support your judgment — never to replace it.</h2>
             <p>A space that is as honest about its limits as it is about what it can do.</p>
             <div className="lp-actions">
