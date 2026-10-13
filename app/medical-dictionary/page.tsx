@@ -120,7 +120,7 @@ function Dictionary() {
                 <div>
                   <div className="dict-tags">
                     {result.category && <span className="ui-badge is-bare">{result.category}</span>}
-                    {result.difficulty && <span className="ui-badge is-bare is-saffron">{result.difficulty}</span>}
+                    {result.difficulty && <span className="ui-badge is-bare is-gold">{result.difficulty}</span>}
                   </div>
                   <h2>{result.term}</h2>
                   <p className="dict-pron">

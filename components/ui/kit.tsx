@@ -15,7 +15,7 @@ export function BrandLoader({ label = 'Preparing your space', size = 88, screen 
     <div className="ui-loader" role="status" aria-live="polite">
       <div className="ui-loader-mark" style={{ '--loader-size': `${size}px` } as React.CSSProperties}>
         <span className="ui-loader-ring is-jade" aria-hidden="true" />
-        <span className="ui-loader-ring is-saffron" aria-hidden="true" />
+        <span className="ui-loader-ring is-gold" aria-hidden="true" />
         <Image src="/arogya-mark.png" alt="" width={64} height={64} priority />
       </div>
       <svg className="ui-loader-pulse" viewBox="0 0 120 22" aria-hidden="true">

@@ -1,0 +1,176 @@
+/* ==========================================================================
+   SECTION DIAL + IRIS — the rotary menu (components/shell/PageDial.tsx), the
+   circular page transition (components/iris.ts) and the theme reveal
+   (components/theme-shift.ts). Clay throughout; motion is transform/opacity.
+   ========================================================================== */
+
+.pd-trigger, .pd-layer, .iris {
+  --pd-a: var(--accent);
+  --pd-b: var(--gold);
+  --pd-c: var(--accent-2);
+  --pd-ink: var(--ink);
+  --pd-ink-3: var(--ink-3);
+  --pd-clay: var(--surface);
+  --pd-well: var(--bg-sunken);
+  --pd-canvas: var(--bg);
+}
+
+/* ── Trigger: a clay coin with seven finger holes ─────────────────────── */
+.pd-trigger {
+  position: relative; display: inline-grid; place-items: center; flex: none; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%;
+  background: var(--pd-clay); color: var(--pd-ink); cursor: pointer; -webkit-tap-highlight-color: transparent; box-shadow: var(--clay-sm);
+  transition: transform 0.45s var(--ease-spring), box-shadow 0.3s;
+}
+.pd-trigger-glass { position: absolute; inset: 5px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--accent-soft), transparent 70%); pointer-events: none; }
+.pd-glyph { position: relative; transition: transform 0.6s var(--ease-spring); }
+.pd-glyph circle:first-child { fill: none; }
+.pd-glyph circle:not(:first-child) { fill: var(--pd-a); }
+.pd-trigger:hover { transform: translateY(-2px); }
+.pd-trigger:hover .pd-glyph { transform: rotate(60deg); }
+.pd-trigger:active { transform: scale(0.93); box-shadow: var(--clay-press); }
+.pd-trigger:focus-visible { outline: none; box-shadow: var(--clay-sm), var(--ring); }
+.pd-trigger.is-open { z-index: 2147482990; }
+.pd-trigger.is-open .pd-glyph { transform: rotate(180deg) scale(0.86); }
+.pd-trigger.is-dock { width: auto; height: auto; box-shadow: none; background: none; }
+.pd-trigger.is-dock .pd-trigger-glass { display: none; }
+.pd-trigger-text { font-size: 11px; font-weight: 650; color: var(--pd-ink-3); }
+
+/* ── Layer ─────────────────────────────────────────────────────────── */
+.pd-layer {
+  position: fixed; inset: 0; z-index: 2147482995; color: var(--pd-ink); touch-action: none; user-select: none; -webkit-user-select: none;
+  font-family: var(--font-sans);
+  background: radial-gradient(circle at var(--cx) var(--cy), color-mix(in srgb, var(--pd-canvas) 86%, transparent) 0, color-mix(in srgb, var(--pd-canvas) 70%, transparent) calc(var(--bo) + 30px), color-mix(in srgb, var(--pd-canvas) 36%, transparent) calc(var(--bo) * 2.1), color-mix(in srgb, var(--pd-canvas) 14%, transparent) 100%);
+  animation: pd-fade 0.3s ease-out;
+}
+.pd-layer.is-closing { animation: pd-fade-out 0.32s ease-in forwards; }
+@keyframes pd-fade { from { opacity: 0; } }
+@keyframes pd-fade-out { to { opacity: 0; } }
+
+.pd-dial { position: absolute; width: 0; height: 0; transform-origin: 0 0; animation: pd-in 0.75s cubic-bezier(0.2, 1.15, 0.3, 1); will-change: transform; }
+.pd-layer.is-closing .pd-dial { animation: pd-out 0.32s cubic-bezier(0.55, 0, 0.8, 0.3) forwards; }
+@keyframes pd-in { from { transform: scale(0.22); opacity: 0; } 40% { opacity: 1; } }
+@keyframes pd-out { to { transform: scale(0.3); opacity: 0; } }
+
+/* The face inside the rim: a sunken clay plate with a lotus glow and engraved rings. */
+.pd-core {
+  position: absolute; left: calc(var(--bi) * -1); top: calc(var(--bi) * -1); width: calc(var(--bi) * 2); height: calc(var(--bi) * 2); border-radius: 50%; pointer-events: none;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--pd-a) 16%, transparent) 0, color-mix(in srgb, var(--pd-b) 10%, transparent) 42%, transparent 70%),
+    repeating-radial-gradient(circle, transparent 0 30px, color-mix(in srgb, var(--pd-ink) 5%, transparent) 30px 31px),
+    var(--pd-well);
+  box-shadow: var(--clay-press);
+}
+/* The rim: one thick ring of clay, lit from the top-left. */
+.pd-band {
+  position: absolute; left: calc(var(--bo) * -1); top: calc(var(--bo) * -1); width: calc(var(--bo) * 2); height: calc(var(--bo) * 2); border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--pd-clay) 70%, #fff) 0, var(--pd-clay) 45%, color-mix(in srgb, var(--pd-clay) 88%, var(--pd-a)) 100%);
+  -webkit-mask: radial-gradient(circle, transparent calc(var(--bi) - 0.5px), #000 var(--bi)); mask: radial-gradient(circle, transparent calc(var(--bi) - 0.5px), #000 var(--bi));
+  box-shadow: var(--clay-lg);
+}
+:root.dark .pd-band { background: radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--pd-clay) 82%, #fff) 0, var(--pd-clay) 45%, color-mix(in srgb, var(--pd-clay) 85%, var(--pd-a)) 100%); }
+/* Clay can't cast a shadow through a mask, so a soft halo sits beneath the rim. */
+.pd-band::after { content: none; }
+.pd-dial::before { content: ''; position: absolute; left: calc(var(--bo) * -1); top: calc(var(--bo) * -1); width: calc(var(--bo) * 2); height: calc(var(--bo) * 2); border-radius: 50%; box-shadow: 0 40px 80px -30px var(--clay-shade), 0 0 0 1px color-mix(in srgb, var(--pd-ink) 5%, transparent); pointer-events: none; }
+
+/* Bezel ticks turn with the plate. */
+.pd-plate { position: absolute; left: 0; top: 0; width: 0; height: 0; transform: rotate(var(--rot, 0deg)); pointer-events: none; will-change: transform; }
+.pd-plate svg { position: absolute; left: calc(var(--bo) * -1); top: calc(var(--bo) * -1); overflow: visible; }
+.pd-plate line { stroke: color-mix(in srgb, var(--pd-ink) 22%, transparent); stroke-width: 1.2; stroke-linecap: round; }
+.pd-plate line.major { stroke: var(--pd-b); stroke-width: 2.2; }
+.pd-endstop { fill: color-mix(in srgb, var(--pd-ink) 40%, transparent); }
+
+.pd-spot {
+  position: absolute; left: 0; top: 0; width: calc(var(--hole) * 2); height: calc(var(--hole) * 2); margin: calc(var(--hole) * -1); border-radius: 50%; pointer-events: none;
+  transform: rotate(var(--focus)) translateX(var(--R));
+  background: radial-gradient(circle, color-mix(in srgb, var(--pd-a) 30%, transparent) 0, color-mix(in srgb, var(--pd-a) 10%, transparent) 45%, transparent 70%);
+}
+
+/* Finger holes: pressed into the clay. */
+.pd-dial nav { position: absolute; left: 0; top: 0; }
+.pd-hole {
+  --a: calc(var(--focus) + var(--i) * var(--step) + var(--rot, 0deg));
+  --d: min(max(var(--i) - var(--f, 0), var(--f, 0) - var(--i)), 5);
+  position: absolute; left: 0; top: 0; display: grid; place-items: center; width: var(--hole); height: var(--hole); margin: calc(var(--hole) / -2); border-radius: 50%;
+  color: var(--pd-ink); text-decoration: none; -webkit-tap-highlight-color: transparent; will-change: transform;
+  transform: rotate(var(--a)) translateX(var(--R)) rotate(calc(var(--a) * -1)) scale(calc(1.08 - min(var(--d), 3) * 0.07));
+  opacity: calc(1 - var(--d) * 0.12);
+  background: var(--pd-well);
+  box-shadow: var(--clay-press);
+  transition: background-color 0.3s, box-shadow 0.3s, color 0.25s;
+}
+.pd-hole-in { display: grid; justify-items: center; gap: 2px; pointer-events: none; }
+.pd-hole-in svg { color: var(--pd-ink-3); }
+.pd-hole-in small { max-width: calc(var(--hole) - 8px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9.5px; font-weight: 750; color: var(--pd-ink-3); }
+.pd-dial.is-compact .pd-hole-in small { display: none; }
+.pd-hole.is-here .pd-hole-in svg { color: var(--pd-c); }
+.pd-hole.is-here { box-shadow: var(--clay-press), inset 0 0 0 2px color-mix(in srgb, var(--pd-c) 55%, transparent); }
+/* The hole at the finger stop rises out of the clay as a glossy bead. */
+.pd-hole.is-focus {
+  background: radial-gradient(circle at 34% 26%, color-mix(in srgb, var(--pd-a) 45%, #fff), var(--pd-a) 55%, color-mix(in srgb, var(--pd-a) 78%, #000));
+  box-shadow: 0 14px 26px -10px color-mix(in srgb, var(--pd-a) 70%, transparent), inset 0 2px 1px rgba(255, 255, 255, 0.55), inset 0 -6px 12px rgba(0, 0, 0, 0.18);
+}
+.pd-hole.is-focus .pd-hole-in small, .pd-hole.is-focus .pd-hole-in svg { color: var(--on-accent); }
+.pd-hole:not(.is-focus):hover { box-shadow: var(--clay-press), 0 0 0 2px color-mix(in srgb, var(--pd-a) 55%, transparent); }
+.pd-hole:focus-visible { outline: none; }
+.pd-hole:focus-visible.is-focus { box-shadow: 0 0 0 3px var(--pd-ink), 0 14px 26px -10px color-mix(in srgb, var(--pd-a) 70%, transparent); }
+
+.pd-group {
+  --a: calc(var(--focus) + var(--i) * var(--step) + var(--rot, 0deg));
+  --d: min(max(var(--i) - var(--f, 0), var(--f, 0) - var(--i)), 6);
+  position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none;
+  transform: rotate(var(--a)) translateX(calc(var(--bi) + 10px)) rotate(calc(var(--a) * -1));
+  opacity: calc(0.95 - var(--d) * 0.14);
+}
+.pd-group i { position: absolute; left: 0; top: 0; translate: -50% -50%; padding: 3px 8px; border-radius: 99px; background: var(--gold-soft); font: 800 8.5px / 1 var(--font-sans); font-style: normal; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-ink); white-space: nowrap; box-shadow: var(--clay-sm); }
+
+/* Finger stop: a gold clay pin just outside the rim. */
+.pd-stop-arm { position: absolute; left: 0; top: 0; width: 0; height: 0; transform: rotate(var(--focus)) translateX(calc(var(--bo) + 2px)); pointer-events: none; }
+.pd-stop { position: absolute; left: 0; top: -6px; width: 22px; height: 12px; border-radius: 6px; background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--pd-b) 50%, #fff), var(--pd-b) 60%, color-mix(in srgb, var(--pd-b) 70%, #000)); box-shadow: 0 6px 12px -4px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.6); }
+
+/* Hub: the pivot. */
+.pd-hub {
+  position: fixed; z-index: 2; display: grid; place-items: center; width: 48px; height: 48px; translate: -50% -50%; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  color: var(--pd-ink); background: var(--pd-clay); box-shadow: var(--clay), 0 0 0 6px color-mix(in srgb, var(--pd-a) 14%, transparent);
+  animation: pd-hub 0.6s cubic-bezier(0.2, 1.3, 0.35, 1);
+}
+@keyframes pd-hub { from { transform: rotate(-90deg) scale(0.6); } }
+.pd-hub:hover { color: var(--pd-a); }
+
+/* Readout */
+.pd-readout { position: fixed; z-index: 2; display: grid; gap: 8px; width: min(260px, calc(100vw - 24px)); text-align: center; justify-items: center; animation: pd-ro 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.18s backwards; }
+.pd-readout.is-out { padding: 16px 18px; border-radius: 26px; background: var(--pd-clay); box-shadow: var(--clay-lg); }
+@keyframes pd-ro { from { opacity: 0; transform: translateY(8px); } }
+.pd-layer.is-closing .pd-readout { opacity: 0; transition: opacity 0.15s; }
+.pd-ro-meta { display: inline-flex; align-items: baseline; gap: 10px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold-ink); }
+.pd-ro-idx { font-variant-numeric: tabular-nums; letter-spacing: 0; color: var(--pd-ink); font-size: 12px; }
+.pd-ro-idx i { font-style: normal; color: var(--pd-ink-3); }
+.pd-ro-name { display: inline-flex; align-items: center; gap: 10px; font: 450 clamp(24px, 2.6vw, 32px) / 1.08 var(--font-display); letter-spacing: -0.02em; animation: pd-name 0.38s cubic-bezier(0.22, 1, 0.36, 1); }
+.pd-ro-name svg { flex: none; color: var(--pd-a); }
+@keyframes pd-name { from { opacity: 0; transform: translateY(10px) rotate(-3deg); } }
+.pd-ro-hint { font-size: 12px; font-weight: 600; color: var(--pd-ink-3); }
+.pd-ro-nav { display: flex; gap: 8px; }
+.pd-ro-nav button, .pd-action { display: inline-flex; align-items: center; gap: 6px; max-width: 124px; padding: 7px 12px; border: 0; border-radius: 999px; background: var(--pd-clay); color: var(--pd-ink); font: inherit; font-size: 12px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; box-shadow: var(--clay-sm); transition: transform 0.2s var(--ease-spring), opacity 0.2s; }
+.pd-ro-nav button:hover:not(:disabled), .pd-action:hover { transform: translateY(-1px); }
+.pd-ro-nav button:active:not(:disabled), .pd-action:active { box-shadow: var(--clay-press); transform: none; }
+.pd-ro-nav button:disabled { opacity: 0.35; cursor: default; }
+.pd-ro-actions { display: flex; gap: 6px; margin-top: 2px; }
+.pd-action { color: var(--danger); }
+
+@media (prefers-reduced-motion: reduce) { .pd-layer, .pd-dial, .pd-hub, .pd-readout, .pd-ro-name { animation: none !important; } .pd-glyph, .pd-trigger { transition: none !important; } }
+
+/* ── Iris: the circular page transition (a scaling disc) ────────────── */
+.iris { position: fixed; inset: 0; z-index: 2147483100; overflow: hidden; pointer-events: all; }
+.iris.is-revealing { pointer-events: none; }
+.iris-disc {
+  position: absolute; border-radius: 50%; will-change: transform, opacity; transform: scale(0.001);
+  background: radial-gradient(circle, color-mix(in srgb, var(--pd-a) 26%, var(--pd-canvas)) 0, color-mix(in srgb, var(--pd-b) 14%, var(--pd-canvas)) 34%, var(--pd-canvas) 70%);
+}
+.iris-label { position: absolute; left: 50%; top: 50%; translate: -50% -50%; color: var(--ink); font: 450 clamp(26px, 4.4vw, 38px) / 1.1 var(--font-display); letter-spacing: -0.02em; white-space: nowrap; animation: iris-label 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.14s backwards; }
+.iris.is-revealing .iris-label { transition: opacity 0.2s; opacity: 0; }
+@keyframes iris-label { from { opacity: 0; transform: translateY(8px); } }
+
+/* ── Theme reveal (view transition) ─────────────────────────────────── */
+html[data-shift], html[data-shift] *, html[data-shift] *::before, html[data-shift] *::after { transition: none !important; }
+html[data-shift]::view-transition-old(root), html[data-shift]::view-transition-new(root) { mix-blend-mode: normal; }
+html[data-shift="theme"]::view-transition-old(root), html[data-shift="theme"]::view-transition-new(root) { animation: none; }
+html[data-shift="theme"]::view-transition-new(root) { z-index: 1; }

@@ -173,7 +173,7 @@ function Dashboard() {
           ) : <EmptyState icon={ClipboardList} title="Your timeline is clear">New readings and actions will appear here.</EmptyState>}
         </section>
 
-        <aside className="ui-card is-forest dash-visit">
+        <aside className="ui-card is-deep dash-visit">
           <Stethoscope className="dash-visit-icon" />
           <span className="ui-card-label">Before a clinical visit</span>
           <h2>Turn scattered details into a useful conversation.</h2>

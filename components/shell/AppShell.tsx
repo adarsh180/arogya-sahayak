@@ -1,55 +1,42 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import {
   Activity, BookA, CalendarDays, ClipboardCheck, FileSearch, GraduationCap, LayoutDashboard,
-  LifeBuoy, LineChart, LogOut, Menu, MessageSquareText, Pill, Siren, X
+  LifeBuoy, LineChart, LogOut, MessageSquareText, Pill, Siren, UserRound
 } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
 import Brand from './Brand'
 import ThemeToggle from './ThemeToggle'
+import { PageDial, type DialItem } from './PageDial'
 import { BrandLoader, cx } from '@/components/ui/kit'
 
-type NavItem = { href: string; label: string; icon: LucideIcon; emergency?: boolean }
-
-const groups: Array<{ label: string; items: NavItem[] }> = [
-  {
-    label: 'Care',
-    items: [
-      { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
-      { href: '/chat', label: 'Ask Arogya', icon: MessageSquareText },
-      { href: '/health-tracker', label: 'Measurements', icon: Activity },
-      { href: '/medicine-reminder', label: 'Medicines', icon: Pill },
-      { href: '/emergency', label: 'Emergency', icon: Siren, emergency: true },
-    ],
-  },
-  {
-    label: 'Library',
-    items: [
-      { href: '/medical-dictionary', label: 'Dictionary', icon: BookA },
-      { href: '/resources', label: 'Evidence', icon: FileSearch },
-    ],
-  },
-  {
-    label: 'Learn',
-    items: [
-      { href: '/student', label: 'Learning hub', icon: GraduationCap },
-      { href: '/mock-tests', label: 'Mock tests', icon: ClipboardCheck },
-      { href: '/study-planner', label: 'Study planner', icon: CalendarDays },
-      { href: '/analytics', label: 'Progress', icon: LineChart },
-    ],
-  },
+export const appPages: DialItem[] = [
+  { href: '/dashboard', label: 'Overview', short: 'Home', icon: LayoutDashboard, group: 'Care' },
+  { href: '/chat', label: 'Ask Arogya', short: 'Ask', icon: MessageSquareText, group: 'Care' },
+  { href: '/health-tracker', label: 'Measurements', short: 'Track', icon: Activity, group: 'Care' },
+  { href: '/medicine-reminder', label: 'Medicines', short: 'Meds', icon: Pill, group: 'Care' },
+  { href: '/emergency', label: 'Emergency', short: 'SOS', icon: Siren, group: 'Care' },
+  { href: '/medical-dictionary', label: 'Dictionary', short: 'Words', icon: BookA, group: 'Library' },
+  { href: '/resources', label: 'Evidence', short: 'Sources', icon: FileSearch, group: 'Library' },
+  { href: '/student', label: 'Learning hub', short: 'Learn', icon: GraduationCap, group: 'Learn' },
+  { href: '/mock-tests', label: 'Mock tests', short: 'Tests', icon: ClipboardCheck, group: 'Learn' },
+  { href: '/study-planner', label: 'Study planner', short: 'Plan', icon: CalendarDays, group: 'Learn' },
+  { href: '/analytics', label: 'Progress', short: 'Scores', icon: LineChart, group: 'Learn' },
+  { href: '/profile', label: 'Profile', short: 'You', icon: UserRound, group: 'You' },
+  { href: '/help', label: 'Help centre', short: 'Help', icon: LifeBuoy, group: 'You' },
 ]
 
-const tabs: NavItem[] = [
-  { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
+const tabs = [
+  { href: '/dashboard', label: 'Home', icon: LayoutDashboard },
   { href: '/chat', label: 'Ask', icon: MessageSquareText },
   { href: '/health-tracker', label: 'Track', icon: Activity },
   { href: '/student', label: 'Learn', icon: GraduationCap },
 ]
+
+const quick = ['/dashboard', '/chat', '/health-tracker', '/medicine-reminder', '/student']
 
 function isActive(pathname: string, href: string) {
   if (href === '/student') return pathname === '/student'
@@ -60,81 +47,45 @@ export default function AppShell({ children, flush = false, loadingLabel }: { ch
   const pathname = usePathname()
   const router = useRouter()
   const { data: session, status } = useSession()
-  const [open, setOpen] = useState(false)
 
   useEffect(() => {
     if (status === 'unauthenticated') router.replace(`/auth/signin?callbackUrl=${encodeURIComponent(pathname)}`)
   }, [pathname, router, status])
 
-  useEffect(() => { setOpen(false) }, [pathname])
-
-  useEffect(() => {
-    if (!open) return
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false) }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [open])
-
   if (status !== 'authenticated') return <BrandLoader screen label={loadingLabel || 'Opening your space'} />
 
   const name = session.user.name || session.user.email || 'You'
   const initials = name.split(/[\s@.]+/).filter(Boolean).slice(0, 2).map(part => part[0]?.toUpperCase()).join('')
+  const actions = [{ label: 'Sign out', icon: LogOut, onClick: () => signOut({ callbackUrl: '/' }) }]
 
   return (
-    <div className="ui-app">
-      <aside className={cx('ui-sidebar', open && 'is-open')} aria-label="Workspace navigation">
-        <div className="ui-sidebar-top">
-          <Brand href="/dashboard" tagline={session.user.userType === 'student' ? 'Learning workspace' : 'Personal health space'} />
-          <button type="button" className="ui-icon-btn ui-sidebar-close" onClick={() => setOpen(false)} aria-label="Close navigation"><X /></button>
-        </div>
-        <nav className="ui-sidebar-scroll">
-          {groups.map(group => (
-            <div className="ui-nav-group" key={group.label}>
-              <span>{group.label}</span>
-              {group.items.map(({ href, label, icon: Icon, emergency }) => {
-                const active = isActive(pathname, href)
-                return (
-                  <Link key={href} href={href} className={cx('ui-nav-link', active && 'is-active', emergency && 'is-emergency')} aria-current={active ? 'page' : undefined}>
-                    <Icon aria-hidden="true" />{label}{emergency && <span className="ui-nav-tag">112</span>}
-                  </Link>
-                )
-              })}
-            </div>
-          ))}
-          <div className="ui-nav-group">
-            <span>Support</span>
-            <Link href="/help" className="ui-nav-link"><LifeBuoy aria-hidden="true" />Help centre</Link>
-          </div>
-        </nav>
-        <div className="ui-sidebar-foot">
-          <Link href="/profile" className="ui-user" aria-current={pathname === '/profile' ? 'page' : undefined}>
-            <span className="ui-avatar" aria-hidden="true">{initials || 'A'}</span>
-            <span className="ui-user-text"><strong>{session.user.name || 'Your profile'}</strong><small>{session.user.email}</small></span>
-          </Link>
-          <div className="ui-sidebar-actions">
-            <ThemeToggle />
-            <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" onClick={() => signOut({ callbackUrl: '/' })}><LogOut /> Sign out</button>
-          </div>
-        </div>
-      </aside>
-      <button type="button" className={cx('ui-drawer-scrim', open && 'is-open')} onClick={() => setOpen(false)} aria-label="Close navigation" tabIndex={open ? 0 : -1} />
-
-      <div className="ui-main">
-        <header className="ui-topbar">
-          <Brand href="/dashboard" tagline={null} />
+    <div className={cx('ui-app', flush && 'is-flush')}>
+      <header className="ui-topbar">
+        <div className="ui-topbar-inner">
+          <Brand href="/dashboard" tagline={session.user.userType === 'student' ? 'Learning space' : 'Personal health space'} />
+          <nav className="ui-quick" aria-label="Main sections">
+            {appPages.filter(page => quick.includes(page.href)).map(({ href, label, icon: Icon }) => (
+              <Link key={href} href={href} className={cx('ui-quick-link', isActive(pathname, href) && 'is-active')} aria-current={isActive(pathname, href) ? 'page' : undefined}>
+                <Icon aria-hidden="true" />{label}
+              </Link>
+            ))}
+          </nav>
           <div className="ui-topbar-actions">
-            <Link href="/emergency" className="ui-icon-btn" aria-label="Emergency help" style={{ color: 'var(--danger)' }}><Siren /></Link>
+            <Link href="/emergency" className="ui-sos" aria-label="Emergency help"><Siren aria-hidden="true" /><span>112</span></Link>
             <ThemeToggle />
+            <Link href="/profile" className="ui-avatar-coin" aria-label="Your profile" title={name}>{initials || 'A'}</Link>
+            <PageDial items={appPages} title="All sections" label="Open the section dial" actions={actions} anchor="top-right" />
           </div>
-        </header>
-        <main id="main-content" className={cx('ui-content', flush && 'is-flush')}>{children}</main>
-      </div>
+        </div>
+      </header>
+
+      <main id="main-content" className={cx('ui-content', flush && 'is-flush')}>{children}</main>
 
       <nav className="ui-tabbar" aria-label="Quick navigation">
         {tabs.map(({ href, label, icon: Icon }) => (
           <Link key={href} href={href} className={isActive(pathname, href) ? 'is-active' : ''} aria-current={isActive(pathname, href) ? 'page' : undefined}><Icon aria-hidden="true" />{label}</Link>
         ))}
-        <button type="button" onClick={() => setOpen(true)} aria-expanded={open} aria-label="Open all sections"><Menu aria-hidden="true" />More</button>
+        <PageDial items={appPages} title="All sections" label="Open the section dial" actions={actions} variant="dock" />
       </nav>
     </div>
   )

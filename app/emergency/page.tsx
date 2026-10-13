@@ -124,7 +124,7 @@ function Emergency() {
           )}
         </section>
 
-        <aside className="ui-card is-forest emg-map">
+        <aside className="ui-card is-deep emg-map">
           <MapPin />
           <span className="ui-card-label">Find care yourself</span>
           <h2>Search hospitals near you on a map.</h2>

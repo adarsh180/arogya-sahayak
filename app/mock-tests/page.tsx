@@ -71,7 +71,7 @@ function MockTests() {
             <div className="mt-modes">
               {modes.map(({ id, title, questions, minutes, icon: Icon, note }) => (
                 <button key={id} type="button" className={cx('mt-mode', mode === id && 'is-selected')} onClick={() => setMode(id)} aria-pressed={mode === id}>
-                  <span className="ui-row-icon is-saffron"><Icon /></span>
+                  <span className="ui-row-icon is-gold"><Icon /></span>
                   <strong>{title}</strong>
                   <span className="mt-mode-meta"><span><ClipboardCheck /> {questions} questions</span><span><Timer /> {minutes} min</span></span>
                   <small>{note}</small>

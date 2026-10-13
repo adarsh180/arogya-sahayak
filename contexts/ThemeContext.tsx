@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { shiftTheme } from '@/components/theme-shift'
 
 export type ThemePreference = 'light' | 'dark' | 'system'
 export type ResolvedTheme = 'light' | 'dark'
@@ -8,7 +9,7 @@ export type ResolvedTheme = 'light' | 'dark'
 interface ThemeContextType {
   theme: ThemePreference
   resolvedTheme: ResolvedTheme
-  setTheme: (theme: ThemePreference) => void
+  setTheme: (theme: ThemePreference, from?: { x: number; y: number }) => void
   toggleTheme: () => void
 }
 
@@ -59,16 +60,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => media.removeEventListener('change', onSystemChange)
   }, [theme])
 
-  const setTheme = useCallback((next: ThemePreference) => {
+  const setTheme = useCallback((next: ThemePreference, from?: { x: number; y: number }) => {
     try {
       localStorage.setItem(STORAGE_KEY, next)
       localStorage.removeItem('theme')
     } catch {}
-    const root = document.documentElement
-    root.classList.add('theme-shift')
-    window.setTimeout(() => root.classList.remove('theme-shift'), 420)
     setThemeState(next)
-    setResolvedTheme(applyTheme(next))
+    // The colours change once, inside a view transition that reveals them in a circle from the button.
+    shiftTheme(() => setResolvedTheme(applyTheme(next)), from)
   }, [])
 
   const toggleTheme = useCallback(() => {

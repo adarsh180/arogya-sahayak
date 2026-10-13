@@ -76,7 +76,7 @@ function Hub() {
           </div>
         </section>
 
-        <aside className="ui-card is-forest learn-focus">
+        <aside className="ui-card is-deep learn-focus">
           <span className="ui-card-label">Suggested session</span>
           <h2>25 minutes. One hard concept.</h2>
           <ol>

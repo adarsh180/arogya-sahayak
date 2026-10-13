@@ -1,0 +1,147 @@
+/* ==========================================================================
+   CLAY MATERIAL — loaded last. Every surface is soft clay lit from the top-left:
+   raised for things you look at and press, sunken for wells you type into.
+   No glass, no blur. Colours come from the tokens in globals.css.
+   ========================================================================== */
+
+/* Raised clay drops its hairlines; the light and shadow draw the edge instead. */
+.ui-card, .ui-stat, .dash-vital, .ui-modal, .ui-chip, .ui-btn-secondary, .ui-icon-btn.is-outlined,
+.chat-composer, .chat-prompts button, .chat-sources, .chat-upload, .dict-search, .dict-simple,
+.mt-mode, .mt-option, .mt-intro-facts span, .onb-option, .onb-lang, .onb-tour article, .onb-bounds article,
+.auth-mode, .faq-item, .plan-day, .trk-summary, .mt-record, .med-info, .med-time-input, .emg-line,
+.ui-alert, .dash-insight-list article, .dash-setup, .prof-savebar, .mt-start, .home-preview-card,
+.home-preview-vitals > div, .home-study-stack article, .ui-chart-tip, .learn-path, .chat-history-note {
+  border-color: transparent !important;
+}
+
+/* ── Raised surfaces ── */
+.ui-card, .ui-stat, .dash-vital { border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--clay); }
+.ui-stat, .dash-vital { border-radius: var(--r-md); box-shadow: var(--clay-sm); }
+.ui-card.is-interactive:hover, .dash-vital:hover { transform: translateY(-3px); box-shadow: var(--clay-lg); }
+.ui-card.is-sunken { background: var(--bg-sunken); box-shadow: var(--clay-press); }
+.ui-card.is-deep {
+  background: radial-gradient(120% 90% at 20% 0%, var(--deep-2), var(--deep) 60%);
+  box-shadow: 0 26px 50px -24px color-mix(in srgb, var(--deep) 70%, transparent), inset 0 2px 1px rgba(255, 255, 255, 0.14), inset 0 -12px 24px rgba(0, 0, 0, 0.22);
+}
+
+/* ── Buttons: puffy pills ── */
+.ui-btn {
+  border: 0; box-shadow: 0 12px 22px -12px color-mix(in srgb, var(--btn-bg) 85%, transparent), inset 0 2px 1px rgba(255, 255, 255, 0.35), inset 0 -4px 8px rgba(0, 0, 0, 0.16);
+  background: radial-gradient(130% 120% at 30% 0%, color-mix(in srgb, var(--btn-bg) 78%, #fff), var(--btn-bg) 60%);
+  transition: transform 300ms var(--ease-spring), box-shadow var(--t-base), opacity var(--t-base);
+}
+.ui-btn:hover { transform: translateY(-2px); background: radial-gradient(130% 120% at 30% 0%, color-mix(in srgb, var(--btn-bg) 70%, #fff), var(--btn-bg) 60%); box-shadow: 0 16px 26px -12px color-mix(in srgb, var(--btn-bg) 90%, transparent), inset 0 2px 1px rgba(255, 255, 255, 0.4), inset 0 -4px 8px rgba(0, 0, 0, 0.16); }
+.ui-btn:active { transform: translateY(1px) scale(0.98); box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.22), inset 0 -1px 0 rgba(255, 255, 255, 0.2); }
+.ui-btn-secondary, .ui-btn-light { background: var(--surface); box-shadow: var(--clay-sm); }
+.ui-btn-light { --btn-bg: var(--surface); --btn-fg: var(--ink); }
+.ui-btn-secondary:hover, .ui-btn-light:hover { background: var(--surface); box-shadow: var(--clay); }
+.ui-btn-secondary:active, .ui-btn-light:active { box-shadow: var(--clay-press); }
+.ui-btn-ghost, .ui-btn-ghost:hover { background: transparent; box-shadow: none; }
+.ui-btn-ghost:hover { background: var(--accent-tint); }
+.ui-btn:disabled, .ui-btn[aria-disabled='true'] { transform: none; box-shadow: var(--clay-press); background: var(--surface-3); color: var(--ink-3); opacity: 0.8; }
+
+.ui-icon-btn.is-outlined { background: var(--surface); box-shadow: var(--clay-sm); }
+.ui-icon-btn.is-outlined:active { box-shadow: var(--clay-press); }
+
+/* ── Wells: inputs, selects, segmented and tab tracks ── */
+.ui-input, .ui-select, .ui-textarea {
+  border-color: transparent; border-radius: var(--r-sm); background-color: var(--bg-sunken); box-shadow: var(--clay-press);
+}
+.ui-input:hover, .ui-select:hover, .ui-textarea:hover { border-color: transparent; }
+.ui-input:focus, .ui-select:focus, .ui-textarea:focus { border-color: transparent; background-color: var(--surface-2); box-shadow: var(--clay-press), var(--ring); }
+.ui-input:disabled { box-shadow: none; }
+.dict-input .ui-input { box-shadow: none; background-color: transparent; }
+
+.ui-segmented { border: 0; background: var(--bg-sunken); box-shadow: var(--clay-press); }
+.ui-segmented button[aria-pressed='true'], .ui-segmented button[aria-selected='true'] { box-shadow: var(--clay-sm); }
+
+.ui-tabs { display: inline-flex; max-width: 100%; gap: 4px; padding: 5px; border: 0; border-radius: 999px; background: var(--bg-sunken); box-shadow: var(--clay-press); }
+.ui-tabs button { min-height: 38px; padding: 0 16px; border-radius: 999px; transition: color var(--t-fast), background-color var(--t-base), box-shadow var(--t-base); }
+.ui-tabs button::after { content: none; }
+.ui-tabs button[aria-selected='true'] { background: var(--surface); color: var(--accent-strong); box-shadow: var(--clay-sm); }
+:root.dark .ui-tabs button[aria-selected='true'] { color: var(--accent); }
+.ui-tabs .ui-count { background: var(--surface-3); }
+
+.ui-progress { height: 10px; background: var(--bg-sunken); box-shadow: var(--clay-press); }
+.ui-progress > i, .ui-bar-track i { background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 50%, var(--gold))); box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.45); }
+.ui-bar-track { height: 12px; background: var(--bg-sunken); box-shadow: var(--clay-press); }
+
+/* ── Chips, badges, small beads ── */
+.ui-chip { background: var(--surface); box-shadow: var(--clay-sm); transition: transform 300ms var(--ease-spring), box-shadow var(--t-base), color var(--t-fast), background-color var(--t-fast); }
+.ui-chip:hover { transform: translateY(-1px); }
+.ui-chip[aria-pressed='true'] { background: var(--accent-soft); box-shadow: var(--clay-press); transform: none; }
+.ui-badge { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5); }
+:root.dark .ui-badge { box-shadow: none; }
+.ui-row-icon, .ui-empty-icon, .dash-setup-icon, .onb-option-icon, .learn-date, .learn-score { box-shadow: var(--clay-sm); }
+.ui-empty-icon { width: 64px; height: 64px; border-radius: 22px; }
+.ui-avatar { box-shadow: var(--clay-sm); }
+
+/* ── Choice tiles: raised until chosen, then pressed in with a coloured edge ── */
+.mt-mode, .mt-option, .onb-option, .onb-lang, .auth-mode { background: var(--surface); box-shadow: var(--clay-sm); transition: transform 300ms var(--ease-spring), box-shadow var(--t-base), background-color var(--t-base); }
+.mt-mode:hover, .mt-option:hover, .onb-option:hover, .onb-lang:hover, .auth-mode:hover { transform: translateY(-2px); box-shadow: var(--clay); }
+.mt-mode.is-selected, .mt-option.is-selected, .onb-option.is-selected, .onb-lang.is-selected, .auth-mode.is-selected {
+  transform: none; background: var(--accent-soft); box-shadow: var(--clay-press), inset 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.mt-map-grid button { border: 0; background: var(--surface); box-shadow: var(--clay-sm); }
+.mt-map-grid button.is-answered { background: var(--accent-soft); box-shadow: var(--clay-press); }
+
+/* Check beads: an empty well that fills with a glossy bead. */
+.med-check { border: 0; background: var(--bg-sunken); box-shadow: var(--clay-press); }
+.med-check.is-checked { background: radial-gradient(circle at 34% 28%, color-mix(in srgb, var(--accent) 50%, #fff), var(--accent) 60%); box-shadow: 0 8px 14px -6px color-mix(in srgb, var(--accent) 70%, transparent), inset 0 2px 1px rgba(255, 255, 255, 0.5); }
+
+/* ── Overlays ── */
+.ui-overlay { background: color-mix(in srgb, var(--bg) 62%, transparent); backdrop-filter: none; }
+.ui-modal { border: 0; border-radius: var(--r-xl); box-shadow: var(--clay-lg); }
+.ui-toast { border: 0 !important; border-radius: 18px !important; box-shadow: var(--clay) !important; }
+.prof-savebar, .mt-start { background: var(--surface); backdrop-filter: none; box-shadow: var(--clay-lg); }
+
+/* ── Alerts and soft panels sit as gentle pillows ── */
+.ui-alert { border-radius: var(--r-md); box-shadow: var(--clay-sm); }
+.dash-insight-list article { border-left: 0 !important; background: var(--surface-2); box-shadow: var(--clay-press); position: relative; padding-left: 22px; }
+.dash-insight-list article::before { content: ''; position: absolute; left: 10px; top: 16px; bottom: 16px; width: 4px; border-radius: 4px; background: var(--ok); }
+.dash-insight-list article.is-warning::before { background: var(--warn); }
+.dash-insight-list article.is-danger::before { background: var(--danger); }
+.dash-next-dose { box-shadow: var(--clay-press); }
+.trk-summary, .mt-record { gap: 10px; background: transparent; overflow: visible; }
+.trk-summary > div, .mt-record > div { border-radius: var(--r-sm); background: var(--bg-sunken); box-shadow: var(--clay-press); }
+.plan-day { background: var(--surface); box-shadow: var(--clay-sm); }
+.plan-day.is-today { background: var(--accent-soft); box-shadow: var(--clay-press), inset 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent); }
+.faq-item { box-shadow: var(--clay-sm); }
+.faq-item[open] { box-shadow: var(--clay); }
+.learn-path { border-top: 0 !important; margin-bottom: 6px; }
+.learn-path:hover { background: var(--bg-sunken); box-shadow: var(--clay-press); }
+.ui-row { border-top-color: var(--line); }
+
+/* ── Chat ── */
+.chat-history { border-right: 0; margin: 0 14px 0 0; border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--clay); }
+.chat-history-item.is-active { background: var(--bg-sunken); box-shadow: var(--clay-press); }
+.chat-history-item:hover { background: var(--surface-2); }
+.chat-main { border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--clay); overflow: hidden; }
+.chat-bar, .chat-strip { border-bottom-color: var(--line); }
+.chat-strip { background: var(--surface-2); }
+.chat-composer { background: var(--bg-sunken); box-shadow: var(--clay-press); }
+.chat-composer:focus-within { box-shadow: var(--clay-press), var(--ring); }
+.chat-send { box-shadow: 0 10px 18px -8px color-mix(in srgb, var(--accent) 80%, transparent), inset 0 2px 1px rgba(255, 255, 255, 0.4); background: radial-gradient(circle at 34% 26%, color-mix(in srgb, var(--accent) 55%, #fff), var(--accent) 60%); }
+.chat-send:disabled { background: var(--surface-3); box-shadow: var(--clay-press); }
+.chat-prompts button { background: var(--surface-2); box-shadow: var(--clay-sm); }
+.chat-prompts button:hover { box-shadow: var(--clay); }
+.chat-msg.is-user .chat-bubble { background: radial-gradient(120% 120% at 20% 0%, var(--deep-2), var(--deep)); box-shadow: 0 14px 24px -14px color-mix(in srgb, var(--deep) 80%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.12); }
+.chat-avatar, .chat-welcome-mark { box-shadow: var(--clay-sm); }
+.chat-sources { background: var(--bg-sunken); box-shadow: var(--clay-press); }
+.chat-sources a { box-shadow: var(--clay-sm); }
+@media (max-width: 1023px) { .chat-history { margin: 0; border-radius: 0 var(--r-lg) var(--r-lg) 0; } }
+
+/* ── Charts: clay tooltip, softer grid ── */
+.ui-chart-tip { border-radius: 16px; box-shadow: var(--clay); }
+.ui-chart-band { fill: color-mix(in srgb, var(--accent-2) 10%, transparent); }
+.ui-chart-line.is-secondary { stroke: var(--gold); }
+.ui-chart-dot.is-secondary { fill: var(--gold); }
+
+/* ── Dictionary search console ── */
+.dict-search { border-radius: var(--r-xl); box-shadow: var(--clay-lg); }
+.dict-input { border-radius: var(--r-md); background: var(--bg-sunken); box-shadow: var(--clay-press); }
+.dict-simple { box-shadow: var(--clay-press); }
+@media (min-width: 861px) and (max-width: 1023px) { .chat { height: calc(100dvh - var(--topbar-h) - 44px); } }
+@media (max-width: 860px) {
+  .prof-savebar, .mt-start { bottom: calc(100px + env(safe-area-inset-bottom)); }
+}

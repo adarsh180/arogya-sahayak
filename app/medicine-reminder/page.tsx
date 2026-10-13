@@ -159,7 +159,7 @@ function Medicines() {
                     <li key={key} className={cx(done && 'is-done', due && 'is-due')}>
                       <time className="ui-num">{time}</time>
                       <div><strong>{medicine.name}</strong><small>{medicine.dosage}{medicine.aiAnalysis?.withFood ? ` · ${medicine.aiAnalysis.withFood}` : ''}</small></div>
-                      {due && <span className="ui-badge is-saffron">Due</span>}
+                      {due && <span className="ui-badge is-gold">Due</span>}
                       <button type="button" className={cx('med-check', done && 'is-checked')} onClick={() => toggleTaken(key)} aria-pressed={done} aria-label={done ? `Mark ${medicine.name} at ${time} as not taken` : `Mark ${medicine.name} at ${time} as taken`}><Check /></button>
                     </li>
                   )
@@ -196,7 +196,7 @@ function MedicineCard({ medicine, busy, onActive, onRemove }: { medicine: Medici
   return (
     <article className={cx('ui-card med-card', !medicine.isActive && 'is-paused')}>
       <header>
-        <span className="ui-row-icon is-saffron"><Pill /></span>
+        <span className="ui-row-icon is-gold"><Pill /></span>
         <div className="med-card-title"><strong>{medicine.name}</strong><small>{medicine.dosage} · {medicine.frequency}</small></div>
         {!medicine.isActive && <span className="ui-badge">Paused</span>}
       </header>

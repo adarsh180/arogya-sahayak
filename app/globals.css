@@ -3,59 +3,76 @@
 @tailwind utilities;
 
 /*
-  Arogya design system — "clinical ledger"
-  Ivory paper, deep jade ink and a saffron accent taken from the Arogya mark.
-  Every colour on screen comes from these tokens so light and dark stay in step.
+  Arogya design system — "divine clay"
+  Light: Lotus dawn — sandalwood, lotus rose, marigold gold, plum ink, a touch of peacock.
+  Dark: Peacock twilight — midnight indigo, peacock blue, gold, a touch of lotus.
+  Surfaces are soft clay: lit from the top-left, pressed in where you type.
 */
 
 :root {
   --font-sans: var(--font-inter), 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: var(--font-fraunces), 'Iowan Old Style', Georgia, serif;
 
-  --bg: #f5f1e8;
-  --bg-sunken: #ede7da;
-  --surface: #fffdf8;
-  --surface-2: #faf6ee;
-  --surface-3: #f2ecdf;
-  --ink: #14342d;
-  --ink-2: #44605a;
-  --ink-3: #6f847c;
-  --line: rgba(20, 52, 45, 0.11);
-  --line-strong: rgba(20, 52, 45, 0.2);
+  --bg: #f6eee6;
+  --bg-sunken: #eee2d6;
+  --surface: #fff8f2;
+  --surface-2: #fbf1e9;
+  --surface-3: #f3e6db;
+  --ink: #3b2342;
+  --ink-2: #67506d;
+  --ink-3: #8c7790;
+  --line: rgba(59, 35, 66, 0.1);
+  --line-strong: rgba(59, 35, 66, 0.18);
 
-  --jade: #0e6856;
-  --jade-strong: #0a493e;
-  --jade-soft: #e2f0ea;
-  --jade-tint: rgba(14, 104, 86, 0.08);
-  --on-jade: #fffdf8;
+  --accent: #b04866;
+  --accent-strong: #8b3451;
+  --accent-soft: #f7dde3;
+  --accent-tint: rgba(176, 72, 102, 0.08);
+  --on-accent: #fff8f2;
 
-  --saffron: #e69345;
-  --saffron-ink: #9a5414;
-  --saffron-soft: #fbecd8;
+  --accent-2: #1f6f8b;
+  --accent-2-soft: #d6e9ef;
 
-  --forest: #14342d;
-  --forest-2: #1b4339;
-  --on-forest: #eef8f4;
-  --on-forest-2: #a9c4ba;
+  --gold: #d9952f;
+  --gold-ink: #8a5a12;
+  --gold-soft: #f8e6c4;
 
-  --ok: #0e6856;
-  --ok-soft: #e2f0ea;
-  --warn: #9a5a00;
-  --warn-soft: #fcefd6;
-  --danger: #b42318;
-  --danger-soft: #fdeceA;
+  --deep: #3b2342;
+  --deep-2: #4b2f53;
+  --on-deep: #fbeff5;
+  --on-deep-2: #d6c1db;
 
-  --shadow-xs: 0 1px 2px rgba(20, 52, 45, 0.06);
-  --shadow-sm: 0 1px 2px rgba(20, 52, 45, 0.05), 0 4px 14px -6px rgba(20, 52, 45, 0.12);
-  --shadow-md: 0 2px 4px rgba(20, 52, 45, 0.04), 0 14px 34px -14px rgba(20, 52, 45, 0.22);
-  --shadow-lg: 0 4px 8px rgba(20, 52, 45, 0.04), 0 30px 70px -28px rgba(20, 52, 45, 0.35);
-  --ring: 0 0 0 3px rgba(14, 104, 86, 0.22);
+  --ok: #2b8466;
+  --ok-soft: #dcefe6;
+  --warn: #a2620a;
+  --warn-soft: #fbeacb;
+  --danger: #bf3a2c;
+  --danger-soft: #fbe3de;
 
-  --r-xs: 8px;
-  --r-sm: 11px;
-  --r-md: 15px;
-  --r-lg: 20px;
-  --r-xl: 28px;
+  --glow-1: rgba(240, 163, 182, 0.42);
+  --glow-2: rgba(242, 207, 132, 0.38);
+  --glow-3: rgba(124, 203, 224, 0.2);
+
+  /* Clay: a soft drop, a lit top edge and a shaded underside. */
+  --clay-shade: rgba(120, 70, 100, 0.2);
+  --clay-hi: rgba(255, 255, 255, 0.92);
+  --clay-under: rgba(150, 90, 120, 0.1);
+  --clay: 0 22px 40px -22px var(--clay-shade), 0 6px 14px -8px rgba(120, 70, 100, 0.14), inset 0 2px 1px var(--clay-hi), inset 0 -8px 18px var(--clay-under);
+  --clay-sm: 0 10px 20px -12px var(--clay-shade), 0 3px 6px -4px rgba(120, 70, 100, 0.12), inset 0 1.5px 0 var(--clay-hi), inset 0 -4px 10px var(--clay-under);
+  --clay-lg: 0 34px 64px -30px var(--clay-shade), 0 10px 22px -12px rgba(120, 70, 100, 0.16), inset 0 2px 1px var(--clay-hi), inset 0 -12px 26px var(--clay-under);
+  --clay-press: inset 0 3px 7px rgba(120, 70, 100, 0.16), inset 0 -2px 0 rgba(255, 255, 255, 0.85), 0 1px 0 rgba(255, 255, 255, 0.7);
+
+  --shadow-xs: 0 1px 2px rgba(90, 50, 80, 0.06);
+  --shadow-sm: var(--clay-sm);
+  --shadow-md: var(--clay);
+  --shadow-lg: var(--clay-lg);
+  --ring: 0 0 0 3px rgba(176, 72, 102, 0.24);
+
+  --r-xs: 10px;
+  --r-sm: 14px;
+  --r-md: 18px;
+  --r-lg: 24px;
+  --r-xl: 32px;
 
   --ease: cubic-bezier(0.22, 0.8, 0.2, 1);
   --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
@@ -63,52 +80,63 @@
   --t-base: 220ms;
   --t-slow: 460ms;
 
-  --sidebar-w: 268px;
-  --topbar-h: 64px;
-  --content-max: 1180px;
+  --topbar-h: 68px;
+  --content-max: 1200px;
 
   color-scheme: light;
 }
 
 :root.dark {
-  --bg: #0a1311;
-  --bg-sunken: #07100e;
-  --surface: #101c19;
-  --surface-2: #132320;
-  --surface-3: #182b27;
-  --ink: #e8f3ee;
-  --ink-2: #b3c7bf;
-  --ink-3: #82978f;
-  --line: rgba(214, 238, 229, 0.09);
-  --line-strong: rgba(214, 238, 229, 0.18);
+  --bg: #111830;
+  --bg-sunken: #0c1226;
+  --surface: #1c2545;
+  --surface-2: #212b4f;
+  --surface-3: #283359;
+  --ink: #ebeefa;
+  --ink-2: #b8c0dc;
+  --ink-3: #8b94b4;
+  --line: rgba(220, 228, 255, 0.09);
+  --line-strong: rgba(220, 228, 255, 0.17);
 
-  --jade: #6fd0af;
-  --jade-strong: #9be2c8;
-  --jade-soft: rgba(111, 208, 175, 0.13);
-  --jade-tint: rgba(111, 208, 175, 0.07);
-  --on-jade: #052219;
+  --accent: #7ccbe0;
+  --accent-strong: #a8e1ef;
+  --accent-soft: rgba(124, 203, 224, 0.15);
+  --accent-tint: rgba(124, 203, 224, 0.08);
+  --on-accent: #0b2230;
 
-  --saffron: #f1aa63;
-  --saffron-ink: #f6c08a;
-  --saffron-soft: rgba(241, 170, 99, 0.13);
+  --accent-2: #f0a3b6;
+  --accent-2-soft: rgba(240, 163, 182, 0.15);
 
-  --forest: #0f2621;
-  --forest-2: #143229;
-  --on-forest: #eef8f4;
-  --on-forest-2: #9dbab0;
+  --gold: #ebc777;
+  --gold-ink: #f2d594;
+  --gold-soft: rgba(235, 199, 119, 0.15);
 
-  --ok: #6fd0af;
-  --ok-soft: rgba(111, 208, 175, 0.13);
-  --warn: #f3b860;
-  --warn-soft: rgba(243, 184, 96, 0.13);
+  --deep: #2a2253;
+  --deep-2: #342b62;
+  --on-deep: #f3efff;
+  --on-deep-2: #bbb3dc;
+
+  --ok: #6fd3a8;
+  --ok-soft: rgba(111, 211, 168, 0.14);
+  --warn: #f2c36b;
+  --warn-soft: rgba(242, 195, 107, 0.14);
   --danger: #ff8f80;
-  --danger-soft: rgba(255, 143, 128, 0.12);
+  --danger-soft: rgba(255, 143, 128, 0.13);
+
+  --glow-1: rgba(124, 203, 224, 0.16);
+  --glow-2: rgba(240, 163, 182, 0.12);
+  --glow-3: rgba(235, 199, 119, 0.1);
+
+  --clay-shade: rgba(0, 0, 0, 0.55);
+  --clay-hi: rgba(255, 255, 255, 0.08);
+  --clay-under: rgba(0, 0, 0, 0.26);
+  --clay: 0 24px 44px -22px var(--clay-shade), 0 6px 14px -8px rgba(0, 0, 0, 0.35), inset 0 1.5px 0 var(--clay-hi), inset 0 -10px 20px var(--clay-under);
+  --clay-sm: 0 12px 22px -12px var(--clay-shade), 0 3px 6px -4px rgba(0, 0, 0, 0.3), inset 0 1px 0 var(--clay-hi), inset 0 -5px 12px var(--clay-under);
+  --clay-lg: 0 36px 70px -30px var(--clay-shade), 0 10px 22px -12px rgba(0, 0, 0, 0.4), inset 0 1.5px 0 var(--clay-hi), inset 0 -14px 28px var(--clay-under);
+  --clay-press: inset 0 3px 8px rgba(0, 0, 0, 0.42), inset 0 -1px 0 rgba(255, 255, 255, 0.06);
 
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 16px -8px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.25), 0 16px 36px -16px rgba(0, 0, 0, 0.6);
-  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.25), 0 30px 70px -28px rgba(0, 0, 0, 0.7);
-  --ring: 0 0 0 3px rgba(111, 208, 175, 0.28);
+  --ring: 0 0 0 3px rgba(124, 203, 224, 0.3);
 
   color-scheme: dark;
 }
@@ -135,9 +163,6 @@
     font-feature-settings: 'cv11', 'ss01', 'calt';
   }
 
-  html.theme-shift, html.theme-shift *, html.theme-shift *::before, html.theme-shift *::after {
-    transition: background-color 320ms var(--ease), border-color 320ms var(--ease), color 220ms var(--ease), fill 220ms var(--ease) !important;
-  }
 
   h1, h2, h3, h4 { color: var(--ink); letter-spacing: -0.015em; }
 
@@ -147,7 +172,7 @@
 
   :focus-visible { outline: none; box-shadow: var(--ring); border-radius: 6px; }
 
-  ::selection { background: var(--saffron-soft); color: var(--ink); }
+  ::selection { background: var(--gold-soft); color: var(--ink); }
 
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -161,7 +186,7 @@
 
 .skip-link {
   position: fixed; left: 16px; top: -60px; z-index: 200; padding: 10px 16px; border-radius: var(--r-sm);
-  background: var(--forest); color: var(--on-forest); font-weight: 600; transition: top var(--t-base) var(--ease);
+  background: var(--deep); color: var(--on-deep); font-weight: 600; transition: top var(--t-base) var(--ease);
 }
 .skip-link:focus { top: 16px; }
 

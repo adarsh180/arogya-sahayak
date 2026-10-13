@@ -24,7 +24,7 @@ export default function ResourcesPage() {
       <section className="ev-grid" aria-label="Sources">
         {sources.map(source => (
           <Link key={source.id} href={`/resources/${source.id}`} className="ui-card ev-card is-interactive">
-            <span className="ui-badge is-bare is-saffron">{levelLabels[source.evidenceLevel || 'patient-fact-sheet']}</span>
+            <span className="ui-badge is-bare is-gold">{levelLabels[source.evidenceLevel || 'patient-fact-sheet']}</span>
             <h2>{source.title}</h2>
             <p>{source.publisher}</p>
             <small>Reviewed {source.reviewedAt}</small>

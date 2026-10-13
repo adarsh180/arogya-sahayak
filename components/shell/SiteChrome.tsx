@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { ArrowRight, Menu, X } from 'lucide-react'
+import { ArrowRight, GraduationCap, Home, LayoutDashboard, LifeBuoy, LogIn, ShieldCheck, Siren, Sparkles, UserPlus } from 'lucide-react'
+import { PageDial, type DialItem } from './PageDial'
 import Brand from './Brand'
 import ThemeToggle from './ThemeToggle'
 import { cx } from '@/components/ui/kit'
@@ -18,7 +19,6 @@ const links = [
 export function SiteHeader() {
   const { status } = useSession()
   const [scrolled, setScrolled] = useState(false)
-  const [open, setOpen] = useState(false)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
@@ -28,9 +28,23 @@ export function SiteHeader() {
   }, [])
 
   const signedIn = status === 'authenticated'
+  const dialItems: DialItem[] = [
+    { href: '/', label: 'Home', icon: Home, group: 'Explore' },
+    { href: '/#capabilities', label: 'What it does', short: 'Features', icon: Sparkles, group: 'Explore' },
+    { href: '/#safety', label: 'Safety', icon: ShieldCheck, group: 'Explore' },
+    { href: '/#students', label: 'For students', short: 'Learn', icon: GraduationCap, group: 'Explore' },
+    { href: '/emergency', label: 'Emergency numbers', short: 'SOS', icon: Siren, group: 'Help' },
+    { href: '/help', label: 'Help centre', short: 'Help', icon: LifeBuoy, group: 'Help' },
+    ...(signedIn
+      ? [{ href: '/dashboard', label: 'Open workspace', short: 'Space', icon: LayoutDashboard, group: 'Account' }]
+      : [
+          { href: '/auth/signin', label: 'Sign in', icon: LogIn, group: 'Account' },
+          { href: '/auth/signup', label: 'Create account', short: 'Join', icon: UserPlus, group: 'Account' },
+        ]),
+  ]
 
   return (
-    <header className={cx('ui-site-header', (scrolled || open) && 'is-scrolled')}>
+    <header className={cx('ui-site-header', scrolled && 'is-scrolled')}>
       <div className="ui-site-header-inner">
         <Brand />
         <nav className="ui-site-nav" aria-label="Primary">
@@ -46,24 +60,9 @@ export function SiteHeader() {
               <Link href="/auth/signup" className="ui-btn ui-btn-sm is-desktop">Create account</Link>
             </>
           )}
-          <button type="button" className="ui-icon-btn ui-site-menu" onClick={() => setOpen(value => !value)} aria-expanded={open} aria-label={open ? 'Close menu' : 'Open menu'}>
-            {open ? <X /> : <Menu />}
-          </button>
+          <span className="ui-site-dial"><PageDial items={dialItems} title="Menu" label="Open the menu dial" anchor="top-right" /></span>
         </div>
       </div>
-      {open && (
-        <nav className="ui-site-sheet" aria-label="Mobile">
-          {links.map(link => <Link key={link.href} href={link.href} onClick={() => setOpen(false)}>{link.label}</Link>)}
-          {signedIn ? (
-            <Link href="/dashboard" className="ui-btn ui-btn-block">Open workspace <ArrowRight /></Link>
-          ) : (
-            <>
-              <Link href="/auth/signin" onClick={() => setOpen(false)}>Sign in</Link>
-              <Link href="/auth/signup" className="ui-btn ui-btn-block">Create account</Link>
-            </>
-          )}
-        </nav>
-      )}
     </header>
   )
 }

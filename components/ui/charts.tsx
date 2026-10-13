@@ -96,8 +96,8 @@ export function TrendChart({ points, unit, band, label, height = 220, format = (
       <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={label}>
         <defs>
           <linearGradient id={`${id}-fill`} x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0" stopColor="var(--jade)" stopOpacity="0.18" />
-            <stop offset="1" stopColor="var(--jade)" stopOpacity="0" />
+            <stop offset="0" stopColor="var(--accent)" stopOpacity="0.18" />
+            <stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
           </linearGradient>
         </defs>
         {band && <rect className="ui-chart-band" x={pad.left} width={width - pad.left - pad.right} y={y(band[1])} height={Math.max(0, y(band[0]) - y(band[1]))} />}

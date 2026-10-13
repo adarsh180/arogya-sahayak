@@ -65,7 +65,7 @@ function Analytics() {
       ) : (
         <div className="prog-grid">
           <section className="ui-card ui-card-pad prog-trend">
-            <div className="ui-card-head"><div><span className="ui-card-label">Score trend</span><h2>Each test, in order</h2></div>{stats && stats.streak > 0 && <span className="ui-badge is-saffron is-bare"><Flame /> {stats.streak}-day streak</span>}</div>
+            <div className="ui-card-head"><div><span className="ui-card-label">Score trend</span><h2>Each test, in order</h2></div>{stats && stats.streak > 0 && <span className="ui-badge is-gold is-bare"><Flame /> {stats.streak}-day streak</span>}</div>
             {stats ? (
               stats.timeline.length > 1
                 ? <TrendChart label="Mock test scores over time" unit="%" band={[70, 100]} points={stats.timeline.map(item => ({ date: item.date, value: item.score, note: item.subject }))} />
